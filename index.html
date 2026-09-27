@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Road to the word test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --asphalt:#26374a; --ink:#1c2733; --paper:#f4f6f8; --card:#ffffff; --line:#d5dce3;
+  --sign:#f2c230; --sign-ink:#2a2200; --field:#2f7a4a; --field-soft:#e3f1e7;
+  --stop:#c3432c; --stop-soft:#fbe7e3; --muted:#5d6b79;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,"Segoe UI",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --asphalt:#0f1a26; --ink:#e6ebf0; --paper:#16212d; --card:#1e2b39; --line:#334456;
+    --sign:#f2c230; --sign-ink:#2a2200; --field:#5fc083; --field-soft:#1d3a2a;
+    --stop:#ff7a62; --stop-soft:#43231e; --muted:#9fb0c0;
+  }
+}
+:root[data-theme="dark"]{
+  --asphalt:#0f1a26; --ink:#e6ebf0; --paper:#16212d; --card:#1e2b39; --line:#334456;
+  --field:#5fc083; --field-soft:#1d3a2a; --stop:#ff7a62; --stop-soft:#43231e; --muted:#9fb0c0;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45}
+button,input{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sign);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px 40px}
+
+/* Route header: the memorable element */
+header.route{background:var(--asphalt);color:#fff;padding:18px 16px 22px}
+header.route .inner{max-width:640px;margin:0 auto}
+.route h1{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;margin:0 0 4px;letter-spacing:.3px}
+.route p{margin:0;color:#c9d4df;font-size:15px}
+.road{position:relative;margin:18px 0 4px;height:52px}
+.road::before{content:"";position:absolute;left:0;right:0;top:28px;height:10px;background:#3d5068;border-radius:5px}
+.road::after{content:"";position:absolute;left:8px;right:8px;top:32px;height:2px;
+  background:repeating-linear-gradient(90deg,var(--sign) 0 12px,transparent 12px 22px)}
+.stops{position:absolute;inset:0;display:flex;justify-content:space-between;z-index:1}
+.stopdot{width:30px;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--display);font-weight:600;font-size:14px;color:#9fb0c0}
+.stopdot span{height:18px;line-height:18px}
+.stopdot i{display:block;width:22px;height:22px;margin-top:0;border-radius:50%;background:#3d5068;border:3px solid #5a6f88}
+.stopdot.done i{background:var(--field);border-color:#9fe0b5}
+.stopdot.today i{background:var(--sign);border-color:#fff;width:28px;height:28px;margin-top:-3px}
+.stopdot.today{color:#fff}
+.stopdot.test i{border-radius:4px;background:var(--stop);border-color:#ffb4a6}
+.car{position:absolute;top:20px;width:44px;height:26px;margin-left:-22px;left:15px;transition:left .8s ease-out;z-index:2}
+.car svg{display:block;width:100%;height:100%}
+.stopdot.today i{visibility:hidden}
+.learned{margin-top:10px}
+.lrow{display:flex;justify-content:space-between;font-size:15px;color:#c9d4df}
+.lrow span:last-child{font-family:var(--display);font-size:20px;font-weight:600;color:#fff}
+.lbar{height:12px;border-radius:6px;background:#3d5068;display:flex;overflow:hidden;margin-top:4px}
+.lbar .lm{background:#5fc083;transition:width .6s}
+.lbar .lp{background:rgba(242,194,48,.55);transition:width .6s}
+.llegend{font-size:13px;color:#9fb0c0;margin-top:5px}
+.llegend .k{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 5px 0 0;vertical-align:-1px}
+.llegend .k.p{margin-left:12px;background:rgba(242,194,48,.55)} .llegend .k.m{background:#5fc083}
+.status{font-size:15px;color:#c9d4df;margin-top:6px}
+.status b{font-family:var(--display);font-size:20px;color:var(--sign);font-weight:600}
+
+section{margin-top:20px}
+h2{font-family:var(--display);font-weight:800;font-size:26px;margin:0 0 8px}
+h3{font-size:17px;margin:0 0 6px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.task{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.task:first-of-type{border-top:0;padding-top:0}
+.tag{font-family:var(--display);font-weight:600;font-size:14px;padding:2px 8px;border-radius:6px;background:var(--sign);color:var(--sign-ink);white-space:nowrap}
+.tag.paper{background:var(--field-soft);color:var(--field)}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.btn{border:0;border-radius:12px;padding:13px 18px;min-height:48px;background:var(--asphalt);color:#fff;font-weight:700}
+.btn.primary{background:var(--sign);color:var(--sign-ink)}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn.good{background:var(--field);color:#fff}
+.btn.bad{background:var(--stop);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+nav.tabs{display:flex;gap:6px;margin-top:16px;overflow-x:auto}
+nav.tabs button{flex:1;min-width:88px;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 6px;font-weight:700;font-size:15px}
+nav.tabs button[aria-current="true"]{border-color:var(--asphalt);background:var(--asphalt);color:#fff}
+
+/* Practice card */
+.cardtop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 18px}
+.bar b{display:block;height:100%;background:var(--field);transition:width .3s}
+.prompt{font-size:28px;font-weight:700;line-height:1.2;margin:4px 0 16px;overflow-wrap:anywhere}
+.answer{width:100%;font-size:24px;padding:14px;border-radius:12px;border:3px solid var(--line);background:var(--paper);color:var(--ink)}
+.answer.ok{border-color:var(--field)}
+.answer.no{border-color:var(--stop)}
+.fb{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:17px}
+.fb.ok{background:var(--field-soft)}
+.fb.no{background:var(--stop-soft)}
+.fb .model{font-size:24px;font-weight:700;letter-spacing:.5px;margin-top:6px;overflow-wrap:anywhere}
+.fb .model mark{background:var(--sign);color:var(--sign-ink);border-radius:3px;padding:0 1px}
+.hintline{font-size:22px;letter-spacing:4px;margin-top:10px;font-weight:700}
+.big{font-size:40px;font-weight:700;line-height:1.15;margin:10px 0;overflow-wrap:anywhere}
+.setrow{padding:10px 0;border-top:1px solid var(--line)}
+.setrow:first-child{border-top:0}
+.setbar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;display:flex;margin-top:6px}
+.setbar .m{background:var(--field)} .setbar .s{background:var(--sign)}
+ul.tricky{list-style:none;padding:0;margin:0;columns:2;column-gap:20px}
+ul.tricky li{padding:4px 0;break-inside:avoid}
+.legend{display:flex;gap:14px;font-size:13px;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+label.row{display:flex;gap:10px;align-items:center;padding:8px 0}
+input[type=date]{padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--paper);color:var(--ink)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choices .btn{width:100%}
+.fibtn{border:1.5px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;font-size:12px;font-weight:700;padding:1px 7px;margin-left:8px;vertical-align:2px;min-height:24px}
+.fibtn[aria-expanded="true"]{background:var(--asphalt);border-color:var(--asphalt);color:#fff}
+.fitext{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+.fitext[hidden]{display:none}
+@media (max-width:420px){.prompt{font-size:24px}.big{font-size:32px}ul.tricky{columns:1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="route">
+  <div class="inner">
+    <h1>Road to the word test</h1>
+    <p id="dayline">Day 1 of 8</p>
+    <div class="road"><div class="stops" id="stops"></div>
+      <div class="car" id="car" aria-hidden="true"><svg viewBox="0 0 40 24"><path d="M4 15 L7 8 Q8 6 11 6 L25 6 Q28 6 30 8 L34 13 L37 14 Q39 15 39 17 L39 19 L1 19 L1 17 Q1 15 4 15 Z" fill="#f2c230" stroke="#2a2200" stroke-width="1.2"/><path d="M11 8.5 L17 8.5 L17 13 L8.5 13 Z M19 8.5 L25 8.5 L30 13 L19 13 Z" fill="#9fd1ff" stroke="#2a2200" stroke-width="1"/><circle cx="10" cy="19.5" r="3.6" fill="#2a2200"/><circle cx="30" cy="19.5" r="3.6" fill="#2a2200"/><circle cx="10" cy="19.5" r="1.4" fill="#ddd"/><circle cx="30" cy="19.5" r="1.4" fill="#ddd"/></svg></div>
+    </div>
+    <div class="learned">
+      <div class="lrow"><span>Your progress</span><span id="lcount"></span></div>
+      <div class="lbar" role="img" id="lbar"><span class="lm" id="lm"></span><span class="lp" id="lp"></span></div>
+      <div class="llegend"><span class="k m"></span>learned for sure <span class="k p"></span>in practice</div>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </div>
+</header>
+<div class="wrap">
+  <nav class="tabs" id="tabs">
+    <button data-v="home">Today</button>
+    <button data-v="practice">Practise</button>
+    <button data-v="paper">Paper</button>
+    <button data-v="progress">Progress</button>
+    <button data-v="settings">Settings</button>
+  </nav>
+  <main id="view"></main>
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const SETS = {
+ 1:"Portal & beach", 2:"Device & road trip", 3:"Football", 4:"Adventure",
+ 5:"be & have", 6:"Daily routines", 7:"Hobbies", 8:"Feeling ill"
+};
+const RAW = `
+#1
+a portal|portaali
+loading|ladataan
+a place|paikka
+without|ilman
+a remote control|kaukosäädin
+Don't worry!|Älkää olko huolissanne!
+download|lataus
+complete|valmis
+could|saattaa (olla)
+anywhere|missä vain
+really|todella
+hope|toivoa
+so|niin
+a beach|ranta
+warm|lämmin
+after|jälkeen
+long|pitkä
+a kid|lapsi
+relax|rentoutua
+around|ympärillä
+a campfire|leirinuotio
+believe|uskoa
+possible|mahdollinen
+wanted|halusin
+a dolphin|delfiini
+a wife|vaimo
+#2
+strange|outo
+a device|laite
+unfortunately|valitettavasti
+work|toimia
+fix|korjata
+together|yhdessä
+enjoy|nauttia
+well|no
+I guess|luulen
+take a road trip|mennä autoretkelle
+a road trip|autoretki
+I think|luulen
+There's a pool in the hotel.|Hotellissa on uima-allas.
+a pool|uima-allas
+a magazine|aikakauslehti
+before|ennen
+before bed|ennen nukkumaanmenoa
+interesting|mielenkiintoinen
+bake|leipoa
+We don't bake.|Me emme leivo.
+They don't play the drums.|He eivät soita rumpuja.
+I don't run.|Minä en juokse.
+She / he doesn't cook.|Hän ei tee ruokaa.
+#3
+earrings|korvakorut
+a hero|sankari
+a field|kenttä
+football|amerikkalainen jalkapallo
+a player|pelaaja
+people|ihmiset
+a few|muutamia
+a fan|fani
+an elementary school|alakoulu
+be|olla
+grow up|kasvaa isoksi
+was|oli
+a moment|hetki
+a life|elämä
+professional|ammattilais-
+junior|juniori, nuorempi
+a cheerleader|cheerleader
+everything|kaikki
+favourite|suosikki
+a hobby|harrastus
+cheer|hurrata, kannustaa
+sometimes|joskus
+a squad|joukkue
+yesterday|eilen
+practice|harjoitella
+a weekend|viikonloppu
+a water boy|juomapoika, pelaajien huoltaja
+pretty|melko
+simple|yksinkertainen
+a towel|pyyhe
+amazing|hämmästyttävä
+a job|työ
+free time|vapaa-aika
+which|mistä; mikä
+the most|eniten
+keep|pitää
+a secret|salaisuus
+#4
+its|sen
+a steering wheel|ratti
+an adventure|seikkailu
+across|poikki
+a memory|muisto
+a little|vähän
+hurt|sattua, loukkaantunut
+a street|katu
+awesome|mahtava
+You're doing great.|Sinulla sujuu hienosti.
+back|takaisin
+a hill|mäki
+a sandwich|voileipä
+move|liikkua
+Oops!|Hups!
+dizzy|pyörryksissä
+a couple of|pari
+check|tarkistaa
+Did you fix it?|Korjasitko sinä sen?
+with|kanssa
+tape|teippi
+power|virta
+Well done!|Hyvin tehty!
+ill|sairas
+a blister|rakko
+wet|märkä
+already|jo
+home|kotiin
+luck|onni
+#5
+I am|minä olen
+you are|sinä olet
+he/she is|hän on
+we are|me olemme
+you are|te olette
+they are|he/ne ovat
+I am not|minä en ole
+you are not|sinä et ole
+he/she is not|hän ei ole
+we are not|me emme ole
+you are not|te ette ole
+they are not|he/ne eivät ole
+Am I?|Olenko minä?
+Are you?|Oletko sinä?
+Is he/she?|Onko hän?
+Are we?|Olemmeko me?
+Are you?|Oletteko te?
+Are they?|Ovatko he/ne?
+I have|minulla on
+you have|sinulla on
+he/she has|hänellä on
+we have|meillä on
+you have|teillä on
+they have|heillä/niillä on
+I don't have|minulla ei ole
+you don't have|sinulla ei ole
+he/she doesn't have|hänellä ei ole
+we don't have|meillä ei ole
+you don't have|teillä ei ole
+they don't have|heillä/niillä ei ole
+Do I have?|Onko minulla?
+Do you have?|Onko sinulla?
+Does he/she have?|Onko hänellä?
+Do we have?|Onko meillä?
+Do you have?|Onko teillä?
+Do they have?|Onko heillä/niillä?
+#6
+wake up|herätä
+brush my teeth|harjata hampaat
+have breakfast|syödä aamiaista
+have a shower|käydä suihkussa
+get dressed|pukeutua
+take a bus|mennä bussilla
+do my homework|tehdä kotitehtävät
+go to sleep|mennä nukkumaan
+forget my books|unohtaa kirjat
+remember my keys|muistaa avaimet
+learn English|oppia englantia
+have lunch|syödä lounasta
+make a snack|tehdä välipala
+have dinner|syödä päivällistä
+use my phone|käyttää puhelinta
+#7
+read comics|lukea sarjakuvia
+go fishing|käydä kalastamassa
+go skateboarding|käydä skeittaamassa
+go to art class|käydä taidetunnilla
+go horseback riding|käydä ratsastamassa
+go cycling|käydä pyöräilemässä
+do gymnastics|voimistella
+play an instrument|soittaa soitinta
+sing in a choir|laulaa kuorossa
+play in a band|soittaa bändissä
+play in a team|pelata joukkueessa
+do athletics|yleisurheilla
+go climbing|käydä kiipeilemässä
+go orienteering|käydä suunnistamassa
+go hiking|käydä vaeltamassa
+go skiing|käydä laskettelemassa
+do crafts|tehdä käsitöitä
+What does Emma do on Thursdays?|Mitä Emma tekee torstaisin?
+She goes to art class.|Hän käy taidetunnilla.
+#8
+a headache|päänsärky
+a sore throat|kurkkukipu
+a runny nose|nuha
+a temperature|kuume
+a cold|flunssa
+a stomach ache|vatsakipu
+a broken leg|murtunut jalka
+a cough|yskä
+a bruise|mustelma
+a cut|haava
+a sprained ankle|nyrjähtänyt nilkka
+a plaster|laastari
+a cast|kipsi
+a thermometer|lämpömittari
+medicine|lääke
+a tissue|nenäliina
+What's wrong?|Mikä hätänä?
+I'm ill. I have a headache.|Olen kipeä. Minulla on päänsärkyä.
+You need medicine.|Tarvitset lääkettä.
+`;
+const ITEMS=[]; {let s=0; RAW.trim().split("\n").forEach(l=>{l=l.trim(); if(!l)return; if(l[0]==="#"){s=+l.slice(1);return}
+  const [en,fi]=l.split("|"); ITEMS.push({id:"i"+ITEMS.length,set:s,en:en.trim(),fi:fi.trim()});});}
+const BYID=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+
+/* Which sets open on which day (day 1..8) */
+const UNLOCK={1:[1,6],2:[2,7],3:[5],4:[3],5:[4,8]};
+
+/* Sentences for the paper translation task (day 7) */
+const SENTENCES=[
+ ["Emma käy ratsastamassa lauantaisin.","Emma goes horseback riding on Saturdays."],
+ ["Leo ei soita rumpuja.","Leo doesn't play the drums."],
+ ["Onko sinulla kuume?","Do you have a temperature?"],
+ ["Minulla on kurkkukipu ja yskä.","I have a sore throat and a cough."],
+ ["He eivät käy kalastamassa.","They don't go fishing."],
+ ["Mitä Leo tekee maanantaisin?","What does Leo do on Mondays?"],
+ ["Emmalla on nyrjähtänyt nilkka.","Emma has a sprained ankle. / She has a sprained ankle."],
+ ["Minä en ole sairas.","I am not ill. / I'm not ill."],
+ ["Hotellissa on uima-allas.","There's a pool in the hotel."],
+ ["Korjasitko sinä sen?","Did you fix it?"],
+ ["Leo harjaa hampaansa ennen nukkumaanmenoa.","Leo brushes his teeth before bed."],
+ ["Onko hänellä laastari?","Does he / she have a plaster?"]
+];
+
+/* Day plan: paper tasks */
+const PAPER={
+ 1:["Look – say – cover – write – check","Take today's 5 hardest words (Progress → Tricky words). Write each one from memory on paper, check it and correct it in a different colour. Circle the tricky part.",
+    "Katso – sano – peitä – kirjoita – tarkista.","Ota päivän 5 vaikeinta sanaa (Edistyminen → Vaikeat sanat). Kirjoita jokainen muistista paperille, tarkista ja korjaa eri värillä. Ympyröi hankala kohta."],
+ 2:["Write 5 sentences about someone's week","Write about a family member or a friend: My dad goes cycling on Sundays. He doesn't go skiing. Use hobby and routine words. A grown-up checks the -s and doesn't.",
+    "Kirjoita 5 lausetta jonkun viikosta.","Kirjoita perheenjäsenestä tai kaverista. Käytä harrastus- ja rutiinisanoja. Aikuinen tarkistaa -s:n ja doesn't-muodon."],
+ 3:["be and have tables from memory","Without the book, write I am … they are, the negatives and the questions. Do the same for have. Check and correct in a different colour. Remember: he/she → is, has, doesn't, Does.",
+    "be- ja have-taulukot muistista.","Kirjoita ilman kirjaa myönteiset, kielteiset ja kysymykset. Sama have-verbille. Tarkista ja korjaa eri värillä. Hän → is, has, doesn't, Does."],
+ 4:["Dictation with a grown-up","A grown-up opens Paper → Tricky words and reads in Finnish. You write in English on paper. Mistakes go into tomorrow's review.",
+    "Sanelu aikuisen kanssa.","Aikuinen lukee suomeksi (Paperi → Vaikeat sanat), sinä kirjoitat englanniksi paperille. Väärät menevät huomisen kertaukseen."],
+ 5:["Brain dump: Feeling ill words","In 2 minutes, write every Feeling ill word you remember (a headache …). Check against the list and add the missing ones in another colour.",
+    "Aivotyhjennys: sairaussanat.","Kirjoita 2 minuutissa kaikki muistamasi sairaussanat. Tarkista listasta ja lisää puuttuvat toisella värillä."],
+ 6:["Dictation with a grown-up","Paper → Tricky words. Write a or an before the word, like in the test.",
+    "Sanelu aikuisen kanssa.","Paperi → Vaikeat sanat. Kirjoita a tai an sanan eteen, kuten kokeessa."],
+ 7:["Translate sentences","Paper → Sentences. A grown-up reads in Finnish, you write in English. Check capital letters and apostrophes (don't, doesn't).",
+    "Lauseiden käännös.","Paperi → Lauseet. Aikuinen lukee suomeksi, sinä kirjoitat englanniksi. Tarkista isot alkukirjaimet ja heittomerkit."],
+ 8:["Mock test on paper","Paper → Mock test. 40 items from all sets, focused on the hard ones. Correct mistakes straight away, then practise them once more in the app (Practise → Free review).",
+    "Harjoituskoe paperilla.","Paperi → Harjoituskoe. 40 kohtaa kaikista sarjoista, painottuu vaikeisiin. Korjaa virheet heti ja harjoittele ne vielä sovelluksessa."]
+};
+
+/* Spelling tips: [key, hint EN, hint FI (shown before retry, never reveal letters), explanation EN, explanation FI (after the answer)] */
+const SILENT=["This word has a silent letter.","Sanassa on kirjain, joka ei äänny."];
+const DOUBLE=["One letter is doubled. Which one?","Yksi kirjain on tuplana. Mikä?"];
+const TWOV=["Two vowels sit together here. Which comes first?","Kohdassa on kahden vokaalin yhdistelmä. Kumpi tulee ensin?"];
+const TIPS=[
+ ["choir","It isn't spelt the way it sounds. It starts like chair.","Sana ei kirjoiteta niin kuin se kuulostaa. Alku on sama kuin sanassa chair.","Said [kwaiə], spelt c-h-o-i-r.","Lausutaan [kwaiə], kirjoitetaan c-h-o-i-r."],
+ ["stomach","The [k] sound is spelt with two letters here.","Äänne [k] kirjoitetaan tässä kahdella kirjaimella.","ch says [k]: s-t-o-m-a-c-h.","ch lausutaan [k]: s-t-o-m-a-c-h."],
+ ["headache","The end isn't spelt the way it sounds.","Loppuosa ei kirjoiteta niin kuin se kuulostaa.","head + ache (ache = [eik]).","head + ache (ache = [eik])."],
+ ["ache","The end isn't spelt the way it sounds.","Loppuosa ei kirjoiteta niin kuin se kuulostaa.","ache = [eik]: a-c-h-e.","ache = [eik]: a-c-h-e."],
+ ["cough","The [f] sound is spelt with two letters here.","Äänne [f] kirjoitetaan tässä kahdella kirjaimella.","ough says [of]: c-o-u-g-h.","ough lausutaan [of]: c-o-u-g-h."],
+ ["could",...SILENT,"The l is silent: c-o-u-l-d. Same as would and should.","l ei äänny: c-o-u-l-d. Sama kuin would ja should."],
+ ["guess",SILENT[0]+" There's also a double letter at the end.",SILENT[1]+" Lisäksi lopussa on tuplakirjain.","The u is silent: g-u-e-s-s.","u ei äänny: g-u-e-s-s."],
+ ["believe",...TWOV,"ie: bel-ie-ve.","ie: bel-ie-ve."],["field",...TWOV,"ie: f-ie-l-d.","ie: f-ie-l-d."],
+ ["people","There's a letter in the middle you can't hear.","Keskellä on kirjain, jota ei kuule.","eo in the middle: p-e-o-p-l-e.","eo keskellä: p-e-o-p-l-e."],
+ ["bruise",TWOV[0]+" There's a silent letter at the end.",TWOV[1]+" Lopussa on äänetön kirjain.","ui: b-r-u-i-s-e.","ui: b-r-u-i-s-e."],
+ ["tissue",DOUBLE[0]+" The end isn't spelt the way it sounds.",DOUBLE[1]+" Loppu ei kirjoiteta niin kuin se kuulostaa.","ss + ue: t-i-ss-ue.","ss + ue: t-i-ss-ue."],
+ ["dizzy",...DOUBLE,"Double z: di-zz-y.","Kaksi z:aa: di-zz-y."],
+ ["earrings","It's made of two words. Where do they meet?","Sana on kahdesta sanasta. Missä ne kohtaavat?","ear + rings → double r.","ear + rings → kaksi r:ää."],
+ ["possible",...DOUBLE,"Double s: po-ss-ible.","Kaksi s:ää: po-ss-ible."],
+ ["professional","One letter is doubled and one isn't. Check f and s.","Yksi kirjain on tuplana, yksi ei. Tarkista f ja s.","One f, double s: pro-f-e-ss-ional.","Yksi f, kaksi s:ää: pro-f-e-ss-ional."],
+ ["already","Check how many l's there are.","Tarkista l-kirjainten määrä.","Only one l: al-ready.","Vain yksi l: al-ready."],
+ ["unfortunately","Build it from parts: un + … + ly.","Rakenna palasista: un + … + ly.","un + fortunate + ly.","un + fortunate + ly."],
+ ["thermometer","The first sound isn't a Finnish t.","Alun äänne ei ole suomen t.","th at the start: th-er-mo-me-ter.","th alussa: th-er-mo-me-ter."],
+ ["athletics","There's a sound in the middle that Finnish doesn't have.","Keskellä on äänne, jota suomessa ei ole.","th: a-th-letics.","th: a-th-letics."],
+ ["gymnastics","The [i] sound is spelt with a different letter here.","Äänne [i] kirjoitetaan tässä eri kirjaimella.","y says [i]: g-y-m-nastics.","y lausutaan [i]: g-y-m-nastics."],
+ ["junior","The first sound isn't a Finnish j – but the letter can still be there.","Alkuäänne ei ole suomen j, mutta kirjain voi silti olla.","j says [dž]: j-u-n-i-o-r.","j lausutaan [dž]: j-u-n-i-o-r."],
+ ["enjoy","The [dž] sound – which letter?","Äänne [dž] – mikä kirjain?","j says [dž]: en-j-oy.","j lausutaan [dž]: en-j-oy."],
+ ["dolphin","The [f] sound is spelt with two letters.","Äänne [f] kirjoitetaan kahdella kirjaimella.","ph = [f]: dol-ph-in.","ph = [f]: dol-ph-in."],
+ ["sandwich","There's a letter you can hardly hear.","Sanassa on kirjain, jota tuskin kuulee.","Write the d: san-d-wich.","d kirjoitetaan: san-d-wich."],
+ ["squad","The [kw] sound is spelt with a special letter pair.","Äänne [kw] kirjoitetaan tietyllä kirjainparilla.","qu = [kw]: s-qu-ad.","qu = [kw]: s-qu-ad."],
+ ["steering wheel","Both words have the same vowel twice in a row. The second word starts with a silent letter.","Molemmissa sanoissa on kaksi samaa vokaalia peräkkäin. Toisen sanan alussa on äänetön kirjain.","st-ee-ring wh-eel.","st-ee-ring wh-eel."],
+ ["which","It starts with a silent letter.","Alussa on äänetön kirjain.","wh at the start: wh-i-ch.","wh alussa: wh-i-ch."],
+ ["throat","It starts with a sound Finnish doesn't have. Two vowels in the middle.","Alussa äänne, jota suomessa ei ole. Keskellä vokaalipari.","th + oa: th-r-oa-t.","th + oa: th-r-oa-t."],
+ ["cheerleader","Two different spellings of the [ii] sound.","Kaksi eri tapaa kirjoittaa [ii]-ääni.","ee + ea: ch-ee-r-l-ea-der.","ee + ea: ch-ee-r-l-ea-der."],
+ ["orienteering","A long [ii] near the end – how is it spelt?","Lopussa pitkä [ii] – miten se kirjoitetaan?","orient-ee-ring.","orient-ee-ring."],
+ ["favourite","British English has one more letter than American English.","Brittienglannissa on yksi kirjain enemmän kuin amerikanenglannissa.","favourite (favorite is also OK).","favourite (favorite käy myös)."],
+ ["across","One of the consonants is doubled.","Toinen konsonanteista on tuplana.","One c, double s: a-c-ro-ss.","Yksi c, kaksi s:ää: a-c-ro-ss."],
+ ["couple","The [a] sound is spelt with two vowels.","Äänne [a] kirjoitetaan kahdella vokaalilla.","ou says [a]: c-ou-ple.","ou lausutaan [a]: c-ou-ple."],
+ ["awesome","It's made of two parts.","Sana on kahdesta osasta.","awe + some.","awe + some."],
+ ["device","The [s] sound is spelt with another letter.","Äänne [s] kirjoitetaan toisella kirjaimella.","c says [s]: devi-c-e.","c lausutaan [s]: devi-c-e."],
+ ["strange","The [dž] sound is spelt without a j here.","Äänne [dž] kirjoitetaan tässä ilman j:tä.","g says [dž]: stran-g-e.","g lausutaan [dž]: stran-g-e."],
+ ["towel","The [au] sound isn't spelt au.","Äänne [au] ei kirjoiteta au.","ow: t-ow-el.","ow: t-ow-el."],
+ ["magazine","The [z] sound – which letter?","Äänne [z] – kumpi kirjain?","z, not s: maga-z-ine.","z, ei s: maga-z-ine."],
+ ["amazing","The [z] sound – which letter?","Äänne [z] – kumpi kirjain?","z, not s: ama-z-ing.","z, ei s: ama-z-ing."],
+ ["beach","The long [ii] is spelt with two different vowels here.","Pitkä [ii] kirjoitetaan tässä kahdella eri vokaalilla.","ea says [ii]: b-ea-ch.","ea lausutaan [ii]: b-ea-ch."],
+ ["temperature","It's easy to drop a letter in the middle.","Keskeltä jää helposti yksi kirjain pois.","tem-per-a-ture.","tem-per-a-ture."],
+ ["sprained","The [ei] sound is spelt with two vowels.","Äänne [ei] kirjoitetaan kahdella vokaalilla.","ai: spr-ai-ned.","ai: spr-ai-ned."],
+ ["medicine","The [s] sound is spelt with another letter.","Äänne [s] kirjoitetaan toisella kirjaimella.","c says [s]: medi-c-ine.","c lausutaan [s]: medi-c-ine."],
+ ["thursday","Days start with a capital letter. It starts with a sound Finnish doesn't have.","Päivät kirjoitetaan englanniksi isolla. Alussa äänne, jota suomessa ei ole.","Th-ur-s-day, capital T.","Th-ur-s-day, iso T."],
+ ["english","Languages start with a capital letter in English.","Kielet kirjoitetaan englanniksi isolla alkukirjaimella.","English with a capital E.","English isolla E:llä."],
+ ["doesn't","Remember the apostrophe.","Muista heittomerkki.","does + n't: the apostrophe replaces the o.","does + n't: heittomerkki o:n paikalle."],
+ ["don't","Remember the apostrophe.","Muista heittomerkki.","do + n't.","do + n't."],
+ ["art class","Check the first word carefully: is there an extra letter?","Tarkista ensimmäinen sana tarkasti: onko siinä ylimääräinen kirjain?","art class (not arts).","art class (ei arts)."],
+ ["horseback","It's made of two parts.","Sana on kahdesta osasta.","horse + back.","horse + back."],
+ ["skateboarding","It's made of three parts.","Sana on kolmesta osasta.","skate + board + ing.","skate + board + ing."],
+ ["campfire","It's made of two parts.","Sana on kahdesta osasta.","camp + fire.","camp + fire."],
+ ["remote control","Two words – split them into syllables.","Kaksi sanaa – tavuta ne.","re-mote con-trol.","re-mote con-trol."],
+ ["interesting","Split it: four syllables.","Tavuta: neljä tavua.","in-ter-est-ing.","in-ter-est-ing."],
+ ["adventure","Split it: three syllables.","Tavuta: kolme tavua.","ad-ven-ture.","ad-ven-ture."]
+];
+function tipRec(en){const l=en.toLowerCase(); for(const t of TIPS){ if(l.includes(t[0])) return t;} return null}
+function tipHint(en){const t=tipRec(en); return t?{en:t[1],fi:t[2]}:null}
+function tipFor(en){const t=tipRec(en); return t?{en:t[3],fi:t[4]}:null}
+/* Bilingual message: English first, Finnish behind the FI button */
+function bi(m,bold){ if(!m) return ""; if(typeof m==="string") return bold?`<b>${esc(m)}</b>`:`<div class="small">${esc(m)}</div>`;
+  const t=bold?`<b>${esc(m.en)}</b>`:esc(m.en);
+  return `<div class="${bold?"":"small"}">${t}<button class="fibtn" type="button" aria-label="Näytä suomeksi" aria-expanded="false">FI</button><span class="fitext" hidden>${esc(m.fi)}</span></div>`}
+document.addEventListener("click",e=>{const b=e.target.closest(".fibtn"); if(!b)return; e.preventDefault();
+  const s=b.nextElementSibling; s.hidden=!s.hidden; b.setAttribute("aria-expanded",String(!s.hidden))});
+
+/* ---------------- STATE ---------------- */
+const KEY="sanakoe-v1";
+function todayStr(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.items) return s;}catch(e){} return null}
+let S=load()||{start:todayStr(),items:{},km:0,daysDone:{},strict:true,extra:[]};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function dayIndex(){const a=new Date(S.start+"T00:00:00"),b=new Date(todayStr()+"T00:00:00");return Math.floor((b-a)/864e5)+1}
+function curDay(){return Math.max(1,Math.min(9,dayIndex()))}
+function unlockedSets(){const d=curDay(),out=new Set(S.extra); for(let i=1;i<=Math.min(d,8);i++)(UNLOCK[i]||[]).forEach(x=>out.add(x)); return out}
+function st(id){return S.items[id]||(S.items[id]={box:0,due:0,wrong:0,right:0})}
+const BOX_WEIGHT=[0,.25,.5,.75,1];
+function readiness(){let t=0; for(const i of ITEMS){const s=S.items[i.id]; if(s) t+=BOX_WEIGHT[Math.min(4,s.box)]} return t/ITEMS.length}
+function isMastered(id){return (S.items[id]||{}).box>=4}
+function dueItems(){const d=curDay(),u=unlockedSets();
+  return ITEMS.filter(i=>u.has(i.set)).filter(i=>{const s=S.items[i.id]; return !s||s.box===0||s.due<=d});}
+function tricky(n=15){return ITEMS.filter(i=>S.items[i.id]&&(S.items[i.id].wrong>0||S.items[i.id].box===1))
+  .sort((a,b)=>(S.items[b.id].wrong-S.items[a.id].wrong)||(S.items[a.id].box-S.items[b.id].box)).slice(0,n)}
+
+/* ---------------- ANSWER CHECKING ---------------- */
+const CONTR=[["i'm","i am"],["you're","you are"],["we're","we are"],["they're","they are"],["he's","he is"],["she's","she is"],
+ ["i've","i have"],["you've","you have"],["we've","we have"],["they've","they have"],
+ ["isn't","is not"],["aren't","are not"],["don't","do not"],["doesn't","does not"],["there's","there is"],["what's","what is"],["didn't","did not"]];
+function norm(s){s=s.toLowerCase().replace(/[’‘`´]/g,"'").replace(/[.!?,;:]/g," ").replace(/\s*\/\s*/g,"/").replace(/\s+/g," ").trim();
+  s=s.replace(/(^| )(he|she|it)'s got(?= |$)/g,"$1$2 has got");
+  for(const [c,f] of CONTR) s=s.replace(new RegExp("(^| )"+c+"(?= |$)","g"),"$1"+f);
+  s=s.replace(/\bfavorite\b/g,"favourite").replace(/\bpractise\b/g,"practice");
+  return s}
+function variants(en){ // expand "he/she" tokens
+  const toks=norm(en).split(" "); let out=[""];
+  for(const t of toks){ let opts=[t]; if(t.includes("/")){const p=t.split("/"); opts=[...p,p.join("/"),[...p].reverse().join("/")];}
+    const nx=[]; out.forEach(o=>opts.forEach(x=>nx.push((o?o+" ":"")+x))); out=nx; }
+  return [...new Set(out)];
+}
+/* Other correct answers. Finnish prompt is more specific than the list entry (halusin → I wanted),
+   Finnish doesn't show the possessive (harjata hampaat), or a standard alternative (have got). */
+const ALT={
+ "wanted":["I wanted"],
+ "a pool":["a swimming pool"],
+ "There's a pool in the hotel.":["There's a swimming pool in the hotel."],
+ "could":["could be"],
+ "football":["American football"],
+ "I have":["I have got"],"you have":["you have got"],"he/she has":["he/she has got"],
+ "we have":["we have got"],"they have":["they have got"],
+ "I'm ill. I have a headache.":["I'm ill. I have got a headache."],
+ "She goes to art class.":["He goes to art class."]
+};
+const POSS=["brush my teeth","do my homework","forget my books","remember my keys","use my phone"];
+POSS.forEach(e=>{ALT[e]=["your","his","her",""].map(p=>e.replace(" my "," "+(p?p+" ":"")).replace(/ +/g," "))});
+/* Finnish "unohtaa kirjat" points to specific books, so "the" is natural too (not for teeth: "brush the teeth" isn't idiomatic) */
+POSS.filter(e=>e!=="brush my teeth").forEach(e=>ALT[e].push(e.replace(" my "," the ")));
+/* Verb items: "to hope" etc. is also accepted, since the Finnish prompt is an infinitive */
+const VERB_SETS=new Set([6,7]);
+const VERBS=new Set(["hope","relax","believe","work","fix","enjoy","bake","take a road trip","be","grow up","cheer","practice","keep","hurt","move","check"]);
+function isVerb(it){return (VERBS.has(it.en)||VERB_SETS.has(it.set)) && !/[.?!]$/.test(it.en)}
+function forms(it){return [it.en,...(ALT[it.en]||[])]}
+function allForms(it){const f=new Set(); forms(it).forEach(x=>variants(x).forEach(v=>{f.add(v); if(isVerb(it)) f.add("to "+v)})); return f}
+const FI_GROUP={}; ITEMS.forEach(i=>{(FI_GROUP[i.fi]=FI_GROUP[i.fi]||[]).push(i)});
+function lev(a,b){const m=a.length,n=b.length,d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n]}
+function matchForm(it,inp){ // returns the list form the answer matched, or null
+  for(const f of forms(it)){ const vs=variants(f); if(vs.includes(inp)||(isVerb(it)&&inp.startsWith("to ")&&vs.includes(inp.slice(3)))) return f; }
+  return null;
+}
+/* Correct English, but not the book's version: not penalised, but he must still give the book's version */
+const AME={en:"Nearly! This is American English. The book uses the British version – what is it?",fi:"Melkein! Tämä on amerikanenglantia. Kirjassa on brittiläinen versio – mikä?"};
+const OTHER={en:"Nearly! This is correct English too, but the book uses a different expression – what is it?",fi:"Melkein! Tämäkin on oikeaa englantia, mutta kirjassa on toinen ilmaus – mikä?"};
+const BOOKV=[
+ [/^have (breakfast|lunch|dinner)$/,/^(to )?eat (breakfast|lunch|dinner)$/,OTHER],
+ [/^download$/,/^a download$/,{en:"Nearly! That's correct English too, but the book has it without an article, like on a screen: \"… complete\".",fi:"Melkein! Tämäkin on oikein, mutta kirjassa sana on ilman artikkelia, kuten ruudulla: \"… complete\"."}],
+ [/^download$/,/^(a )?downloading$/,{en:"Nearly! That works too, but the book uses the short noun, like on a screen: \"… complete\". What is it?",fi:"Melkein! Tämäkin käy, mutta kirjassa on lyhyt substantiivi, kuten ruudulla: \"… complete\". Mikä se on?"}],
+ [/^have a shower$/,/^(to )?take a shower$/,{en:"Nearly! This is more common in American English. The book uses the British version – what is it?",fi:"Melkein! Tämä on yleisempi amerikanenglannissa. Kirjassa on brittiläinen versio – mikä?"}],
+ [/^take a bus$/,/^(to )?(go|travel) by bus$/,OTHER],
+ [/\btemperature\b/,/\bfever\b/,AME],
+ [/\bplaster\b/,/\bband ?-?aid\b/,AME],
+ [/^ill$/,/^sick$/,{en:"Nearly! This is correct English, but British English and the book use a different word – what is it?",fi:"Melkein! Tämä on oikeaa englantia, mutta brittienglannissa ja kirjassa käytetään toista sanaa – mikä?"}],
+ [/^a kid$/,/^a child$/,{en:"Nearly! This is correct too, but the book uses a more informal word – what is it?",fi:"Melkein! Tämäkin on oikein, mutta kirjassa on arkisempi sana – mikä?"}],
+ [/^go to sleep$/,/^(to )?go to bed$/,{en:"Nearly! This is correct English too (it means going to bed), but the book uses a different expression – what is it?",fi:"Melkein! Tämäkin on oikeaa englantia (mennä sänkyyn), mutta kirjassa on toinen ilmaus – mikä?"}]
+];
+function check(item,input){
+  const inp=norm(input); if(!inp) return {kind:"empty"};
+  const group=FI_GROUP[item.fi]||[item];
+  for(const g of group){ const f=matchForm(g,inp); if(f){
+      if(!capsOK(f,input)) return {kind:"article",note:{en:"Check the capital letters.",fi:"Tarkista isot alkukirjaimet."},caps:true};
+      const poss=POSS.includes(g.en)&&f!==g.en;
+      return {kind:"ok",other:group.filter(x=>x!==g).map(x=>x.en),book:poss?g.en:""}; } }
+  const vs=[...allForms(item)];
+  const main=variants(item.en);
+  // article checks
+  for(const fm of forms(item)){ const art=norm(fm).match(/^(a|an) (.+)$/);
+  if(art){ if(inp===art[2]) return {kind:"article",note:{en:"Remember the article before the word.",fi:"Muista artikkeli sanan eteen."}};
+    const wrongArt=inp.match(/^(a|an) (.+)$/); if(wrongArt&&wrongArt[2]===art[2]) return {kind:"article",note:{en:"Check the article: a or an? Does the word start with a vowel sound?",fi:"Tarkista artikkeli: a vai an? Alkaako sana vokaaliäänellä?"}}; } }
+  const noApos={"doesnt":"does not","dont":"do not","isnt":"is not","arent":"are not","im":"i am","youre":"you are","theres":"there is","whats":"what is","didnt":"did not","ive":"i have"};
+  const fixed=inp.split(" ").map(w=>noApos[w]||w).join(" ");
+  if(fixed!==inp){ for(const g of group){ if(matchForm(g,fixed)) return {kind:"article",note:{en:"The apostrophe is missing.",fi:"Heittomerkki puuttuu."}}; } }
+  for(const [e,i,m] of BOOKV) if(e.test(main[0])&&i.test(inp)) return {kind:"alt",note:m};
+  let best=99; vs.forEach(v=>best=Math.min(best,lev(v,inp)));
+  return {kind:"no",dist:best,gram:grammarTip(main[0],inp)};
+}
+function grammarTip(exp,inp){
+  const R=[
+   [/\bdoes not\b/,/\bdo not\b/,"Who is it about? The he/she form uses a different helping verb.","Kenestä puhutaan? Hän-muodossa apuverbi on eri.","He/she → doesn't.","Hän (he/she) → doesn't."],
+   [/\bdo not\b/,/\bdoes not\b/,"Who is it about? Check the helping verb.","Kenestä puhutaan? Tarkista apuverbi.","I / you / we / they → don't.","I / you / we / they → don't."],
+   [/^does\b/,/^do\b/,"A he/she question uses a different helping verb.","Hän-kysymyksessä apuverbi on eri.","He/she → Does he/she …?","Hän → Does he/she …?"],
+   [/\bhas\b/,/\bhave\b/,"The he/she form of the verb is different from the I/you form.","Hän-muodossa verbi on eri kuin I/you-muodossa.","He/she → has.","Hän → has."],
+   [/\bhave\b/,/\bhas\b/,"Check the verb: who is it about?","Tarkista verbi: kenestä puhutaan?","Only he/she/it → has. Otherwise have.","Vain he/she/it → has. Muuten have."],
+   [/\bis\b/,/\bare\b/,"Check the form of be.","Tarkista be-verbin muoto.","He/she → is.","Hän → is."],
+   [/\bare\b/,/\bis\b/,"Check the form of be.","Tarkista be-verbin muoto.","you / we / they → are.","you / we / they → are."],
+   [/\bgoes\b/,/\bgo\b/,"In the he/she form the verb gets an ending.","Hän-muodossa verbiin tulee pääte.","he/she → goes (-es).","he/she → goes (-es)."],
+   [/\bdid\b/,/\bfixed\b/,"After did, the main verb is in a different form.","did-kysymyksessä pääverbi on eri muodossa.","did + base form: fix.","did + perusmuoto: fix."],
+   [/\bart class\b/,/\barts class\b/,"Check the wording in the book.","Tarkista sanamuoto kirjasta.","art class (not arts).","art class (ei arts)."]
+  ];
+  for(const [e,i,h,hf,x,xf] of R) if(e.test(exp)&&i.test(inp)) return [h,hf,x,xf];
+  return null;
+}
+/* Capital letters: every word written with a capital in the list (I, English, Emma, Thursdays, sentence starts) must be capitalised */
+function capsOK(expected,input){
+  const raw=input.trim().replace(/[’‘`´]/g,"'");
+  if(/^[A-Z]/.test(expected.trim()) && !/^[A-Z]/.test(raw)) return false;
+  const need=new Set(expected.split(/[^A-Za-z]+/).filter(w=>/^[A-Z]/.test(w)).map(w=>w.toLowerCase()));
+  for(const t of raw.split(/[^A-Za-z]+/).filter(Boolean)) if(need.has(t.toLowerCase()) && !/^[A-Z]/.test(t)) return false;
+  return true;
+}
+function diffHTML(correct,attempt){ // highlight letters in correct that attempt missed (LCS)
+  const a=correct,b=(attempt||""),A=a,m=A.length,n=b.length;
+  const L=Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  for(let i=m-1;i>=0;i--)for(let j=n-1;j>=0;j--)L[i][j]=A[i]===b[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+  let i=0,j=0,out="";
+  while(i<m){ if(j<n&&A[i]===b[j]){out+=esc(a[i]);i++;j++} else if(j<n&&L[i][j+1]>=L[i+1][j]){j++} else {out+=a[i]===" "?" ":"<mark>"+esc(a[i])+"</mark>";i++} }
+  return out;
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function hintPattern(en){const w=en.replace(/\s*\/\s*/g,"/"); return w.split("").map((c,k)=>k===0||w[k-1]===" "||w[k-1]==="/"||/[^a-zA-Z]/.test(c)?c:"_").join("").replace(/ /g,"   ")}
+
+/* ---------------- UI ---------------- */
+const $v=document.getElementById("view");
+let view="home";
+function renderRoute(){
+  const d=dayIndex(), el=document.getElementById("stops"); el.innerHTML="";
+  for(let k=1;k<=9;k++){const s=document.createElement("div"); s.className="stopdot"+(k<d?" done":"")+(k===d?" today":"")+(k===9?" test":"");
+    s.innerHTML="<span>"+(k===9?"Test":k)+"</span><i></i>"; el.appendChild(s)}
+  document.getElementById("dayline").textContent = d<1?"The route starts on "+new Date(S.start+"T00:00:00").toLocaleDateString("en-GB") : d>=9?(d===9?"Test day! A light review is enough.":"The test is done – great work!"):"Day "+d+" of 8 · test on day 9";
+  // The road is time: the car sits on today's signpost. Learning is shown separately, so the two never contradict.
+  const car=document.getElementById("car"), pos=Math.max(0,Math.min(8,d-1))/8;
+  car.style.left=`calc(15px + (100% - 30px) * ${pos})`; car.style.visibility=d<1?"hidden":"visible";
+  const total=ITEMS.length, m=ITEMS.filter(i=>isMastered(i.id)).length,
+        p=ITEMS.filter(i=>S.items[i.id]&&S.items[i.id].box>0&&!isMastered(i.id)).length;
+  document.getElementById("lcount").textContent=m+" / "+total+" learned";
+  document.getElementById("lm").style.width=(m/total*100)+"%";
+  document.getElementById("lp").style.width=(p/total*100)+"%";
+  document.getElementById("lbar").setAttribute("aria-label",`${m} of ${total} learned for sure, ${p} in practice`);
+  const left=d>=1&&d<=8?dueItems().length:0;
+  let msg;
+  if(d<1) msg="The route hasn't started yet.";
+  else if(d>=9) msg=d===9?"Good luck in the test!":"The test is done – great work!";
+  else if(left) msg=`<b>${left}</b> cards left today.`;
+  else msg="Today's cards are done ✓";
+  if(d>=1&&d<=3&&m===0) msg+=" Words count as learned after correct answers on two different days.";
+  document.getElementById("status").innerHTML=msg;
+}
+function setView(v){view=v; document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v));
+  renderRoute(); ({home,practice:practiceStart,paper,progress,settings})[v](); window.scrollTo(0,0)}
+document.getElementById("tabs").onclick=e=>{const b=e.target.closest("button"); if(b)setView(b.dataset.v)};
+
+function home(){
+  const d=curDay(), due=dueItems(), total=ITEMS.length, m=ITEMS.filter(i=>isMastered(i.id)).length;
+  const newSets=(UNLOCK[d]||[]).map(s=>SETS[s]).join(" + ");
+  const pt=PAPER[Math.min(d,8)];
+  let h=`<section><h2>${d>=9?"Test day":"Today's tasks"}</h2><div class="panel">`;
+  if(d>=9){h+=bi({en:"In the morning, 5 minutes: go through the tricky words once (Paper → Tricky words). Nothing new to learn. Good luck in the test!",
+     fi:"Aamulla 5 minuuttia: käy vaikeat sanat kerran läpi (Paperi → Vaikeat sanat). Ei uutta opeteltavaa. Onnea kokeeseen!"})}
+  else{
+   h+=`<div class="task"><span class="tag">App</span><div><h3>${due.length? "Drive today's cards: "+due.length:"Today's cards are done ✓"}</h3>
+     ${bi({en:(newSets?"New sets today: "+newSets+". ":"")+"One round = 15 cards, about 5 minutes. You can do rounds throughout the day.",
+          fi:(due.length?"Harjoittele päivän kortit: "+due.length+" kpl. ":"Päivän kortit on tehty. ")+(newSets?"Uudet sarjat tänään: "+newSets+". ":"")+"Yksi kierros = 15 korttia, noin 5 minuuttia. Voit tehdä kierroksia pitkin päivää."})}</div></div>
+     <div class="task"><span class="tag paper">Paper</span><div><h3>${esc(pt[0])}</h3>${bi({en:pt[1],fi:pt[2]+" "+pt[3]})}</div></div>`;
+  }
+  h+=`<div class="btnrow"><button class="btn primary" id="go" ${due.length?"":"disabled"}>Start a round</button></div></div></section>
+   ${d>=6&&d<=8&&due.length===0?'<section><div class="panel"><p class="small muted" style="margin:0">All cards are done. The mock test is on the Paper tab.</p></div></section>':""}`;
+  $v.innerHTML=h;
+  const g=document.getElementById("go"); if(g) g.onclick=()=>startSession("type");
+}
+
+/* ---- practice session ---- */
+let Q=[],qi=0,sess=null;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function practiceStart(){
+  const due=dueItems();
+  $v.innerHTML=`<section><h2>Practise</h2><div class="panel"><p>${due.length?due.length+" cards are waiting today.":"Today's cards are done. You can review freely, or unlock the next set early in Settings."}</p>
+   <div class="btnrow"><button class="btn primary" id="t1">Finnish → English</button><button class="btn ghost" id="t3">Free review (tricky words)</button></div></div></section>`;
+  document.getElementById("t1").onclick=()=>startSession("type");
+  document.getElementById("t3").onclick=()=>startSession("type",true);
+}
+function startSession(mode,free){
+  let pool=free?tricky(30):dueItems();
+  if(free&&!pool.length){const u=unlockedSets(); pool=ITEMS.filter(i=>u.has(i.set))}
+  if(!pool.length){practiceStart();return}
+  const box1=shuffle(pool.filter(i=>S.items[i.id]&&S.items[i.id].box===1));
+  const fresh=shuffle(pool.filter(i=>!S.items[i.id]||S.items[i.id].box===0));
+  const rest=shuffle(pool.filter(i=>S.items[i.id]&&S.items[i.id].box>1));
+  Q=[...box1,...fresh,...rest].slice(0,15).map(i=>({id:i.id,re:false}));
+  qi=0; sess={mode,free:!!free,first:0,fixed:0,seen:new Set(),rq:{},clean:new Set(),tries:0,hint:false,revealed:false,done:false};
+  showCard();
+}
+function showCard(){
+  if(qi>=Q.length){endSession();return}
+  const c=Q[qi], it=BYID[c.id]; sess.tries=0; sess.hint=false; sess.alt=false; sess.revealed=false; sess.done=false;
+  const multi=(FI_GROUP[it.fi]||[]).length>1;
+  $v.innerHTML=`<section><div class="panel">
+   <div class="cardtop"><span>${SETS[it.set]}${c.re?" · again":(c.fill?" · review":"")}</span><span>${qi+1}/${Q.length}</span></div>
+   <div class="bar"><b style="width:${qi/Q.length*100}%"></b></div>
+   <div class="prompt"><span lang="fi">${esc(it.fi)}</span>${multi?' <span class="muted small">(two correct answers)</span>':""}</div>
+   <input class="answer" id="ans" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Your answer in English">
+   <div id="hint"></div><div id="fb"></div>
+   <div class="btnrow"><button class="btn primary" id="chk">Check</button><button class="btn ghost" id="hb">Hint</button><button class="btn ghost" id="quit">Stop</button></div>
+  </div></section>`;
+  const ans=document.getElementById("ans"); ans.focus();
+  ans.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault(); onCheck()}};
+  document.getElementById("chk").onclick=onCheck;
+  document.getElementById("hb").onclick=()=>{sess.hint=true; document.getElementById("hint").innerHTML=`<div class="hintline">${esc(hintPattern(it.en))}</div>`; ans.focus()};
+  document.getElementById("quit").onclick=endSession;
+}
+function onCheck(){
+  const c=Q[qi], it=BYID[c.id], ans=document.getElementById("ans"), fb=document.getElementById("fb");
+  if(sess.done){qi++;showCard();return}
+  if(sess.revealed){ // copy step
+    if(check(it,ans.value).kind==="ok"){sess.fixed++; S.km+=2; save(); fb.innerHTML+=`<p>${c.fill?"Good. This word comes back tomorrow.":"Good. This word comes back later in this round – try to remember it then."}</p>`; finishCard(); }
+    else{ans.classList.add("no"); ans.select()} return }
+  const r=check(it,ans.value); if(r.kind==="empty")return;
+  const tip=tipFor(it.en);
+  if(r.kind==="ok"){
+    ans.classList.remove("no"); ans.classList.add("ok");
+    const firstTry=sess.tries===0&&!sess.hint&&!sess.alt;
+    fb.innerHTML=`<div class="fb ok"><b>${firstTry?["Correct!","Exactly!","Great!"][Math.floor(Math.random()*3)]:(sess.alt&&sess.tries===0?"Great – that's the book's version!":"Correct now!")}</b>
+      ${r.other&&r.other.length?`<div class="small">Also correct: ${esc(r.other.join(", "))}</div>`:""}
+      ${r.book?`<div class="small">In the book: ${esc(r.book)}</div>`:""}
+      ${tip&&!firstTry?bi(tip):""}</div>`;
+    grade(c,firstTry?"first":(sess.alt&&sess.tries===0&&!sess.hint?"alt":"later")); S.km+=firstTry||sess.alt&&sess.tries===0?10:5;
+    if(firstTry) sess.clean.add(c.id);
+    if((sess.tries>0||sess.hint) && !c.fill && requeue(c.id)) fb.querySelector(".fb").insertAdjacentHTML("beforeend",`<div class="small">This word comes back once more in this round.</div>`);
+    save(); finishCard(); return;
+  }
+  if(r.kind==="alt"){ // not a mistake: ask for the book's version without using up a try
+    sess.alt=true; ans.classList.remove("no");
+    fb.innerHTML=`<div class="fb ok">${bi(r.note,true)}</div>`; ans.select(); return;
+  }
+  sess.tries++;
+  ans.classList.add("no");
+  if(sess.tries===1){
+    const msg=r.kind==="article"?r.note:(r.dist<=2?"Almost! A couple of letters are wrong.":"Not yet. Try again.");
+    const extra=r.gram?{en:r.gram[0],fi:r.gram[1]}:(r.kind!=="article"?tipHint(it.en):null);
+    fb.innerHTML=`<div class="fb no">${bi(msg,true)}${bi(extra)}</div>`;
+    if(!sess.hint&&r.kind==="no"&&r.dist>2){sess.hint=true; document.getElementById("hint").innerHTML=`<div class="hintline">${esc(hintPattern(it.en))}</div>`}
+    ans.select(); return;
+  }
+  // second miss: reveal, require copy
+  grade(c,"wrong"); sess.revealed=true;
+  const model=it.en.replace(/\s*\/\s*/g,"/");
+  const expl=r.gram?{en:r.gram[2],fi:r.gram[3]}:tip;
+  fb.innerHTML=`<div class="fb no"><b>Correct answer:</b><div class="model">${diffHTML(model,ans.value)}</div>
+    ${bi(expl)}<div class="small">Now type it correctly once.</div></div>`;
+  ans.value=""; ans.classList.remove("no"); ans.focus();
+  if(!c.fill) requeue(c.id);
+  save();
+}
+/* Successive relearning: a word that needed help keeps coming back in the same round
+   until he recalls it correctly on the first try without a hint (max 4 extra times, then it waits for tomorrow). */
+function requeue(id){
+  const n=sess.rq[id]||0; if(n>=4) return false; sess.rq[id]=n+1;
+  let pos=Math.min(qi+5,Q.length);
+  const gap=pos-qi-1;                       // cards between now and the repeat
+  if(gap<2){ // near the end of the round: put 1–2 familiar words in between, never new ones
+    const inQ=new Set(Q.slice(qi).map(x=>x.id)), d=curDay(), u=unlockedSets();
+    const strong=shuffle(ITEMS.filter(i=>u.has(i.set)&&!inQ.has(i.id)&&i.id!==id&&S.items[i.id]&&S.items[i.id].box>=3&&S.items[i.id].due>d))
+      .sort((a,b)=>S.items[b.id].box-S.items[a.id].box);            // learned words first
+    const cleanToday=shuffle([...sess.clean].filter(x=>!inQ.has(x)&&x!==id)).map(x=>BYID[x]);
+    const fill=[...strong,...cleanToday.filter(i=>!strong.includes(i))].slice(0,2-gap);
+    Q.push(...fill.map(i=>({id:i.id,fill:true}))); pos=Q.length;
+  }
+  Q.splice(pos,0,{id,re:true}); return true;
+}
+function finishCard(){sess.done=true; document.getElementById("chk").textContent="Next"; document.getElementById("hb").disabled=true;
+  const ans=document.getElementById("ans"); ans.readOnly=true; document.getElementById("chk").focus()}
+function grade(c,res){
+  if(c.fill){ if(res==="wrong"){const s=st(c.id); s.wrong++; s.box=1; s.due=curDay()+1} return } // bonus review: a miss sends it to tomorrow, no extra repeats today
+  if(c.re||sess.free){ if(res==="wrong") {const s=st(c.id); s.wrong++} return }  // repeats & free review don't move boxes up
+  const s=st(c.id), d=curDay();
+  if(res==="first"){ s.right++; s.box = s.box===0?3:Math.min(4,s.box+1); s.due=d+({1:1,2:2,3:2,4:3})[s.box]; sess.first++; }
+  else if(res==="alt"){ s.right++; s.box=Math.max(1,s.box); s.due=d+1 } // knew a correct synonym: no penalty, book version checked again tomorrow
+  else if(res==="later"){ s.box=Math.max(1,Math.min(s.box,2)); s.due=d+1 }
+  else { s.wrong++; s.box=1; s.due=d+1 }
+  S.daysDone[d]=(S.daysDone[d]||0)+1;
+}
+function endSession(){
+  save(); const left=dueItems().length;
+  $v.innerHTML=`<section><div class="panel"><h2>Round done</h2>
+   <p>Correct first time: <b>${sess.first}</b>${sess.fixed?` · fixed: <b>${sess.fixed}</b>`:""}</p>
+   <p class="muted">${left?left+" cards left today. You can do the next round now or later.":"Today's cards are done. Don't forget the paper task!"}</p>
+   <div class="btnrow">${left?`<button class="btn primary" id="again">Next round</button>`:""}<button class="btn ghost" id="back">Back</button></div></div></section>`;
+  renderRoute();
+  const a=document.getElementById("again"); if(a)a.onclick=()=>startSession(sess.mode);
+  document.getElementById("back").onclick=()=>setView("home");
+}
+
+/* ---- paper / parent mode ---- */
+let P=null;
+function paper(){
+  $v.innerHTML=`<section><h2>Paper (for a grown-up)</h2><div class="panel">
+   <p class="small muted">The grown-up reads the Finnish aloud, the child writes the English on paper. Reveal the answer and mark it. Mistakes move to tomorrow's review.</p>
+   <div class="choices">
+    <button class="btn primary" data-p="tricky">Tricky words</button>
+    <button class="btn" data-p="mock">Mock test (40)</button>
+    <button class="btn" data-p="sent">Sentences (12)</button>
+    <button class="btn ghost" data-p="set">A whole set…</button>
+   </div><div id="setpick"></div></div></section>`;
+  $v.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.p;
+    if(k==="tricky"){const t=tricky(15); runPaper(t.length?t.map(i=>({id:i.id})):shuffle(ITEMS.filter(i=>unlockedSets().has(i.set))).slice(0,10).map(i=>({id:i.id})),"Tricky words")}
+    if(k==="mock") runPaper(buildMock(),"Mock test");
+    if(k==="sent") runPaper(SENTENCES.map(s=>({fi:s[0],en:s[1]})),"Sentences");
+    if(k==="set"){document.getElementById("setpick").innerHTML=`<div class="choices" style="margin-top:10px">${Object.entries(SETS).map(([n,t])=>`<button class="btn ghost" data-s="${n}">${t}</button>`).join("")}</div>`;
+      document.querySelectorAll("[data-s]").forEach(x=>x.onclick=()=>runPaper(ITEMS.filter(i=>i.set==+x.dataset.s).map(i=>({id:i.id})),SETS[x.dataset.s]))}
+  });
+}
+function buildMock(){
+  const weak=shuffle(ITEMS.filter(i=>{const s=S.items[i.id];return !s||s.box<=2})), strong=shuffle(ITEMS.filter(i=>!weak.includes(i)));
+  const picked=[...weak.slice(0,28)]; for(const i of strong){if(picked.length>=40)break;picked.push(i)}
+  for(const i of weak.slice(28)){if(picked.length>=40)break;picked.push(i)}
+  for(let s=1;s<=8;s++) if(!picked.some(i=>i.set===s)){const x=ITEMS.find(i=>i.set===s); picked[picked.length-1-s]=x}
+  return shuffle(picked).map(i=>({id:i.id}));
+}
+function runPaper(list,title){P={list,title,i:0,ok:0,miss:[]}; paperCard()}
+function paperCard(){
+  if(P.i>=P.list.length){
+    save();
+    $v.innerHTML=`<section><div class="panel"><h2>${esc(P.title)}: ${P.ok}/${P.list.length}</h2>
+     ${P.miss.length?`<p>To practise:</p><ul class="tricky">${P.miss.map(m=>`<li><b>${esc(m.en)}</b> <span class="muted small" lang="fi">${esc(m.fi)}</span></li>`).join("")}</ul>`:"<p>All correct!</p>"}
+     <div class="btnrow"><button class="btn primary" id="pb">Back</button></div></div></section>`;
+    document.getElementById("pb").onclick=()=>setView("paper"); return;
+  }
+  const e=P.list[P.i], it=e.id?BYID[e.id]:e;
+  $v.innerHTML=`<section><div class="panel"><div class="cardtop"><span>${esc(P.title)}</span><span>${P.i+1}/${P.list.length}</span></div>
+   <div class="bar"><b style="width:${P.i/P.list.length*100}%"></b></div>
+   <p class="muted small">Read aloud:</p><div class="big" lang="fi">${esc(it.fi)}</div>
+   <div id="rev"></div>
+   <div class="btnrow" id="pbtns"><button class="btn primary" id="show">Show answer</button></div></div></section>`;
+  document.getElementById("show").onclick=()=>{
+    const alts=e.id?(ALT[it.en]||[]).filter(x=>x!==it.en).slice(0,2):[];
+    const also=e.id?[...alts,...(isVerb(it)?["the to-form"]:[])]:[];
+    document.getElementById("rev").innerHTML=`<div class="fb ok"><div class="model">${esc(it.en)}</div>${also.length?`<div class="small">Also accepted: ${esc(also.join(", "))}</div>`:""}${bi(tipFor(it.en))}</div>`;
+    document.getElementById("pbtns").innerHTML=`<button class="btn good" id="y">✓ Correct</button><button class="btn bad" id="n">✗ Wrong</button>`;
+    document.getElementById("y").onclick=()=>{P.ok++; if(e.id){const s=st(e.id); s.right++; if(s.box===0){s.box=2;s.due=curDay()+1}} S.km+=5; P.i++; paperCard()};
+    document.getElementById("n").onclick=()=>{P.miss.push(it); if(e.id){const s=st(e.id); s.wrong++; s.box=1; s.due=curDay()+1} S.km+=2; P.i++; paperCard()};
+  };
+}
+
+/* ---- progress ---- */
+function progress(){
+  const u=unlockedSets(); let rows="";
+  for(const [n,t] of Object.entries(SETS)){const its=ITEMS.filter(i=>i.set==n), m=its.filter(i=>isMastered(i.id)).length,
+    sn=its.filter(i=>S.items[i.id]&&S.items[i.id].box>0&&!isMastered(i.id)).length;
+    rows+=`<div class="setrow"><div style="display:flex;justify-content:space-between;gap:8px"><b>${t}</b><span class="small muted">${u.has(+n)?m+"/"+its.length:"unlocks later"}</span></div>
+     <div class="setbar"><span class="m" style="width:${m/its.length*100}%"></span><span class="s" style="width:${sn/its.length*100}%"></span></div></div>`}
+  const t=tricky(20);
+  $v.innerHTML=`<section><h2>Sets</h2><div class="panel">${rows}
+    <div class="legend"><span style="--c:var(--field)">Learned for sure</span><span style="--c:var(--sign)">Practising</span></div></div></section>
+   <section><h2>Tricky words</h2><div class="panel">${t.length?`<ul class="tricky">${t.map(i=>`<li><b>${esc(i.en)}</b><br><span class="muted small" lang="fi">${esc(i.fi)}</span></li>`).join("")}</ul>`:"<p class='muted'>No tricky words yet. They appear here when something goes wrong.</p>"}</div></section>`;
+}
+
+/* ---- settings ---- */
+function settings(){
+  const locked=Object.keys(SETS).map(Number).filter(n=>!unlockedSets().has(n));
+  $v.innerHTML=`<section><h2>Settings</h2><div class="panel">
+   <label class="row">First day <input type="date" id="sd" value="${S.start}"></label>
+   <p class="small muted">The test is on day 9: ${new Date(new Date(S.start+"T00:00:00").getTime()+8*864e5).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}.</p>
+   <p class="small muted">Articles (a / an), capital letters and the book's wording are required, like in the test.</p>
+   ${locked.length?`<div class="btnrow"><button class="btn ghost" id="unl">Unlock the next set early (${SETS[locked[0]]})</button></div>`:""}
+   <div class="btnrow" id="resetrow"><button class="btn bad" id="reset">Reset progress</button></div></div></section>`;
+  document.getElementById("sd").onchange=e=>{S.start=e.target.value||todayStr(); save(); setView("settings")};
+  const u=document.getElementById("unl"); if(u)u.onclick=()=>{S.extra.push(locked[0]); save(); setView("settings")};
+  // In-page confirmation: the hosted page can't show browser pop-ups (confirm() is blocked there)
+  document.getElementById("reset").onclick=()=>{
+    const row=document.getElementById("resetrow");
+    row.innerHTML=`<p style="width:100%;margin:0">This returns the app to the start: all progress and tricky words are deleted, today becomes day 1 and only day 1's sets are open. The test moves to ${new Date(Date.now()+8*864e5).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}.</p>
+      <button class="btn bad" id="resetyes">Yes, reset everything</button><button class="btn ghost" id="resetno">Cancel</button>`;
+    document.getElementById("resetno").onclick=()=>setView("settings");
+    document.getElementById("resetyes").onclick=()=>{
+      S={start:todayStr(),items:{},km:0,daysDone:{},strict:true,extra:[]};
+      try{localStorage.removeItem(KEY)}catch(e){}
+      save(); setView("home");
+    };
+    document.getElementById("resetyes").focus();
+  };
+}
+
+setView("home");
+</script>
+</body>
+</html>
