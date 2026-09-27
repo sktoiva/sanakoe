@@ -93,7 +93,8 @@ nav.tabs button[aria-current="true"]{border-color:var(--asphalt);background:var(
 .cardtop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 18px}
 .bar b{display:block;height:100%;background:var(--field);transition:width .3s}
-.prompt{font-size:28px;font-weight:700;line-height:1.2;margin:4px 0 16px;overflow-wrap:anywhere}
+.prompt{font-size:28px;font-weight:700;line-height:1.2;margin:4px 0 14px;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:flex-end;flex-wrap:wrap;gap:0 8px}
+.prompt.long{font-size:20px}
 .answer{width:100%;font-size:24px;padding:14px;border-radius:12px;border:3px solid var(--line);background:var(--paper);color:var(--ink)}
 .answer.ok{border-color:var(--field)}
 .answer.no{border-color:var(--stop)}
@@ -120,7 +121,10 @@ input[type=date]{padding:10px;border-radius:10px;border:2px solid var(--line);ba
 .fibtn[aria-expanded="true"]{background:var(--asphalt);border-color:var(--asphalt);color:#fff}
 .fitext{display:block;color:var(--muted);font-weight:400;margin-top:3px}
 .fitext[hidden]{display:none}
-@media (max-width:420px){.prompt{font-size:24px}.big{font-size:32px}ul.tricky{columns:1}}
+body.session header.route, body.session nav.tabs{display:none}
+body.session .wrap{padding-top:12px}
+#fb,#hint{overflow-anchor:none}
+@media (max-width:420px){.prompt{font-size:24px}.prompt.long{font-size:19px}.big{font-size:32px}ul.tricky{columns:1}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -481,6 +485,7 @@ function tipFor(en){const t=tipRec(en); return t?{en:t[3],fi:t[4]}:null}
 function bi(m,bold){ if(!m) return ""; if(typeof m==="string") return bold?`<b>${esc(m)}</b>`:`<div class="small">${esc(m)}</div>`;
   const t=bold?`<b>${esc(m.en)}</b>`:esc(m.en);
   return `<div class="${bold?"":"small"}">${t}<button class="fibtn" type="button" aria-label="Näytä suomeksi" aria-expanded="false">FI</button><span class="fitext" hidden>${esc(m.fi)}</span></div>`}
+document.addEventListener("mousedown",e=>{if(e.target.closest(".fibtn")&&document.body.classList.contains("session")) e.preventDefault()});
 document.addEventListener("click",e=>{const b=e.target.closest(".fibtn"); if(!b)return; e.preventDefault();
   const s=b.nextElementSibling; s.hidden=!s.hidden; b.setAttribute("aria-expanded",String(!s.hidden))});
 
@@ -643,7 +648,7 @@ function renderRoute(){
   if(d>=1&&d<=3&&m===0) msg+=" Words count as learned after correct answers on two different days.";
   document.getElementById("status").innerHTML=msg;
 }
-function setView(v){view=v; document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v));
+function setView(v){view=v; document.body.classList.remove("session"); document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v));
   renderRoute(); ({home,practice:practiceStart,paper,progress,settings})[v](); window.scrollTo(0,0)}
 document.getElementById("tabs").onclick=e=>{const b=e.target.closest("button"); if(b)setView(b.dataset.v)};
 
@@ -685,25 +690,42 @@ function startSession(mode,free){
   const rest=shuffle(pool.filter(i=>S.items[i.id]&&S.items[i.id].box>1));
   Q=[...box1,...fresh,...rest].slice(0,15).map(i=>({id:i.id,re:false}));
   qi=0; sess={mode,free:!!free,first:0,fixed:0,seen:new Set(),rq:{},clean:new Set(),tries:0,hint:false,revealed:false,done:false};
-  showCard();
+  buildCard(); showCard();
+}
+function buildCard(){
+  document.body.classList.add("session");
+  $v.innerHTML=`<section><div class="panel">
+   <div class="cardtop"><span id="ctag"></span><span id="cnum"></span></div>
+   <div class="bar"><b id="cbar"></b></div>
+   <div class="prompt" id="cprompt"></div>
+   <input class="answer" id="ans" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="enter" aria-label="Your answer in English">
+   <div class="btnrow"><button class="btn primary" id="chk">Check</button><button class="btn ghost" id="hb">Hint</button><button class="btn ghost" id="quit">Stop</button></div>
+   <div id="hint"></div><div id="fb" aria-live="polite"></div>
+  </div></section>`;
+  const ans=document.getElementById("ans");
+  ans.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault(); onCheck()}};
+  // Tapping a button must not take focus from the input: otherwise the keyboard closes and the page jumps
+  $v.querySelectorAll(".btnrow button").forEach(b=>b.addEventListener("mousedown",e=>e.preventDefault()));
+  document.getElementById("chk").onclick=()=>{onCheck(); ans.focus({preventScroll:true})};
+  document.getElementById("hb").onclick=()=>{ if(sess.done) return; sess.hint=true;
+    document.getElementById("hint").innerHTML=`<div class="hintline">${esc(hintPattern(BYID[Q[qi].id].en))}</div>`; ans.focus({preventScroll:true})};
+  document.getElementById("quit").onclick=endSession;
+  window.scrollTo(0,0);
 }
 function showCard(){
   if(qi>=Q.length){endSession();return}
   const c=Q[qi], it=BYID[c.id]; sess.tries=0; sess.hint=false; sess.alt=false; sess.revealed=false; sess.done=false;
   const multi=(FI_GROUP[it.fi]||[]).length>1;
-  $v.innerHTML=`<section><div class="panel">
-   <div class="cardtop"><span>${SETS[it.set]}${c.re?" · again":(c.fill?" · review":"")}</span><span>${qi+1}/${Q.length}</span></div>
-   <div class="bar"><b style="width:${qi/Q.length*100}%"></b></div>
-   <div class="prompt"><span lang="fi">${esc(it.fi)}</span>${multi?' <span class="muted small">(two correct answers)</span>':""}</div>
-   <input class="answer" id="ans" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Your answer in English">
-   <div id="hint"></div><div id="fb"></div>
-   <div class="btnrow"><button class="btn primary" id="chk">Check</button><button class="btn ghost" id="hb">Hint</button><button class="btn ghost" id="quit">Stop</button></div>
-  </div></section>`;
-  const ans=document.getElementById("ans"); ans.focus();
-  ans.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault(); onCheck()}};
-  document.getElementById("chk").onclick=onCheck;
-  document.getElementById("hb").onclick=()=>{sess.hint=true; document.getElementById("hint").innerHTML=`<div class="hintline">${esc(hintPattern(it.en))}</div>`; ans.focus()};
-  document.getElementById("quit").onclick=endSession;
+  document.getElementById("ctag").textContent=SETS[it.set]+(c.re?" · again":(c.fill?" · review":""));
+  document.getElementById("cnum").textContent=(qi+1)+"/"+Q.length;
+  document.getElementById("cbar").style.width=(qi/Q.length*100)+"%";
+  const pr=document.getElementById("cprompt");
+  pr.classList.toggle("long",it.fi.length>26);
+  pr.innerHTML=`<span lang="fi">${esc(it.fi)}</span>${multi?'<span class="muted small">(two correct answers)</span>':""}`;
+  const ans=document.getElementById("ans"); ans.value=""; ans.className="answer";
+  document.getElementById("hint").innerHTML=""; document.getElementById("fb").innerHTML="";
+  document.getElementById("chk").textContent="Check"; document.getElementById("hb").disabled=false;
+  if(document.activeElement!==ans) ans.focus({preventScroll:true});
 }
 function onCheck(){
   const c=Q[qi], it=BYID[c.id], ans=document.getElementById("ans"), fb=document.getElementById("fb");
@@ -744,7 +766,7 @@ function onCheck(){
   const expl=r.gram?{en:r.gram[2],fi:r.gram[3]}:tip;
   fb.innerHTML=`<div class="fb no"><b>Correct answer:</b><div class="model">${diffHTML(model,ans.value)}</div>
     ${bi(expl)}<div class="small">Now type it correctly once.</div></div>`;
-  ans.value=""; ans.classList.remove("no"); ans.focus();
+  ans.value=""; ans.classList.remove("no"); ans.focus({preventScroll:true});
   if(!c.fill) requeue(c.id);
   save();
 }
@@ -765,7 +787,7 @@ function requeue(id){
   Q.splice(pos,0,{id,re:true}); return true;
 }
 function finishCard(){sess.done=true; document.getElementById("chk").textContent="Next"; document.getElementById("hb").disabled=true;
-  const ans=document.getElementById("ans"); ans.readOnly=true; document.getElementById("chk").focus()}
+  document.getElementById("cnum").textContent=(qi+1)+"/"+Q.length}
 function grade(c,res){
   if(c.fill){ if(res==="wrong"){const s=st(c.id); s.wrong++; s.box=1; s.due=curDay()+1} return } // bonus review: a miss sends it to tomorrow, no extra repeats today
   if(c.re||sess.free){ if(res==="wrong") {const s=st(c.id); s.wrong++} return }  // repeats & free review don't move boxes up
@@ -777,6 +799,7 @@ function grade(c,res){
   S.daysDone[d]=(S.daysDone[d]||0)+1;
 }
 function endSession(){
+  document.body.classList.remove("session"); if(document.activeElement) document.activeElement.blur();
   save(); const left=dueItems().length;
   $v.innerHTML=`<section><div class="panel"><h2>Round done</h2>
    <p>Correct first time: <b>${sess.first}</b>${sess.fixed?` · fixed: <b>${sess.fixed}</b>`:""}</p>
