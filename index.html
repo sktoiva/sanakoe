@@ -60,11 +60,11 @@ header.route .inner{max-width:640px;margin:0 auto}
 .lrow{display:flex;justify-content:space-between;font-size:15px;color:#c9d4df}
 .lrow span:last-child{font-family:var(--display);font-size:20px;font-weight:600;color:#fff}
 .lbar{height:12px;border-radius:6px;background:#3d5068;display:flex;overflow:hidden;margin-top:4px}
-.lbar .lm{background:#5fc083;transition:width .6s}
-.lbar .lp{background:rgba(242,194,48,.55);transition:width .6s}
+.lbar span{transition:width .6s}
+.s-learned{background:#27a55a} .s-once{background:repeating-linear-gradient(135deg,#c9f2d6 0 4px,#8fd9a8 4px 8px)} .s-almost{background:#f2c230} .s-notyet{background:#e8875f}
 .llegend{font-size:13px;color:#9fb0c0;margin-top:5px}
+.llegend{display:flex;flex-wrap:wrap;gap:4px 14px}
 .llegend .k{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 5px 0 0;vertical-align:-1px}
-.llegend .k.p{margin-left:12px;background:rgba(242,194,48,.55)} .llegend .k.m{background:#5fc083}
 .status{font-size:15px;color:#c9d4df;margin-top:6px}
 .status b{font-family:var(--display);font-size:20px;color:var(--sign);font-weight:600}
 
@@ -93,7 +93,7 @@ nav.tabs button[aria-current="true"]{border-color:var(--asphalt);background:var(
 .cardtop{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 18px}
 .bar b{display:block;height:100%;background:var(--field);transition:width .3s}
-.prompt{font-size:28px;font-weight:700;line-height:1.2;margin:4px 0 14px;overflow-wrap:anywhere;min-height:2.4em;display:flex;align-items:flex-end;flex-wrap:wrap;gap:0 8px}
+.prompt{font-size:28px;font-weight:700;line-height:1.2;margin:4px 0 14px;overflow-wrap:anywhere;min-height:72px;display:flex;align-items:flex-end;flex-wrap:wrap;gap:0 8px}
 .prompt.long{font-size:20px}
 .answer{width:100%;font-size:24px;padding:14px;border-radius:12px;border:3px solid var(--line);background:var(--paper);color:var(--ink)}
 .answer.ok{border-color:var(--field)}
@@ -103,6 +103,21 @@ nav.tabs button[aria-current="true"]{border-color:var(--asphalt);background:var(
 .fb.no{background:var(--stop-soft)}
 .fb .model{font-size:24px;font-weight:700;letter-spacing:.5px;margin-top:6px;overflow-wrap:anywhere}
 .fb .model mark{background:var(--sign);color:var(--sign-ink);border-radius:3px;padding:0 1px}
+.rulemode #ans,.rulemode #idk,.rulemode #hb{display:none}
+.rulemode .cardtop span:first-child{color:var(--field);font-weight:700}
+.rulemode .btnrow{order:3}
+.rulemode{display:flex;flex-direction:column}
+.rulemode .cardtop{order:0}.rulemode .bar{order:0}.rulemode .prompt{order:1}.rulemode #hint{order:2}.rulemode #fb{order:2}
+.rulebox{background:var(--field-soft);border-radius:12px;padding:14px 16px;font-size:18px}
+.exrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.exword{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:22px;letter-spacing:.5px}
+.exword b{color:var(--field);text-decoration:underline;text-underline-offset:4px}
+.linkbtn{background:none;border:0;color:var(--muted);font-size:14px;text-decoration:underline;margin-left:14px;padding:4px 0;cursor:pointer}
+.model.mine{letter-spacing:1px}
+.fb .model mark.bad,mark.bad{background:var(--stop-soft);color:var(--stop);text-decoration:underline wavy var(--stop);text-underline-offset:4px;border-radius:3px;padding:0 1px}
+.gap{color:var(--stop);font-weight:700;padding:0 1px}
+.model.covered{filter:blur(9px);user-select:none}
+.pick{font-size:20px;letter-spacing:.5px;text-transform:none}
 .hintline{font-size:22px;letter-spacing:4px;margin-top:10px;font-weight:700}
 .big{font-size:40px;font-weight:700;line-height:1.15;margin:10px 0;overflow-wrap:anywhere}
 .setrow{padding:10px 0;border-top:1px solid var(--line)}
@@ -138,8 +153,8 @@ body.session .wrap{padding-top:12px}
     </div>
     <div class="learned">
       <div class="lrow"><span>Your progress</span><span id="lcount"></span></div>
-      <div class="lbar" role="img" id="lbar"><span class="lm" id="lm"></span><span class="lp" id="lp"></span></div>
-      <div class="llegend"><span class="k m"></span>learned for sure <span class="k p"></span>in practice</div>
+      <div class="lbar" role="img" id="lbar"><span class="s-learned" id="lb-learned"></span><span class="s-once" id="lb-once"></span><span class="s-almost" id="lb-almost"></span><span class="s-notyet" id="lb-notyet"></span></div>
+      <div class="llegend"><span><i class="k s-learned"></i>learned</span><span><i class="k s-once"></i>right once</span><span><i class="k s-almost"></i>almost</span><span><i class="k s-notyet"></i>not yet</span></div>
     </div>
     <p class="status" id="status" aria-live="polite"></p>
   </div>
@@ -490,22 +505,90 @@ document.addEventListener("click",e=>{const b=e.target.closest(".fibtn"); if(!b)
   const s=b.nextElementSibling; s.hidden=!s.hidden; b.setAttribute("aria-expanded",String(!s.hidden))});
 
 /* ---------------- STATE ---------------- */
+/* Saved data format: v1 fields are kept exactly as they were; v2 only adds fields with safe defaults.
+   Item ids are positions in the word list, so the list must only ever be appended to, never reordered. */
 const KEY="sanakoe-v1";
 function todayStr(d=new Date()){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY)); if(s&&s.items) return s;}catch(e){} return null}
-let S=load()||{start:todayStr(),items:{},km:0,daysDone:{},strict:true,extra:[]};
+function migrate(s){
+  s.daysDone=s.daysDone||{}; s.extra=s.extra||[]; if(s.km==null) s.km=0;
+  s.timing=s.timing||{secs:0,n:0};        // v2: measured practice time per planned card
+  s.rulesShown=s.rulesShown||{};          // v2: pattern rule cards shown, by day
+  s.v=2; return s;
+}
+let S=migrate(load()||{start:todayStr(),items:{},km:0,daysDone:{},strict:true,extra:[]});
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function dayIndex(){const a=new Date(S.start+"T00:00:00"),b=new Date(todayStr()+"T00:00:00");return Math.floor((b-a)/864e5)+1}
 function curDay(){return Math.max(1,Math.min(9,dayIndex()))}
 function unlockedSets(){const d=curDay(),out=new Set(S.extra); for(let i=1;i<=Math.min(d,8);i++)(UNLOCK[i]||[]).forEach(x=>out.add(x)); return out}
 function st(id){return S.items[id]||(S.items[id]={box:0,due:0,wrong:0,right:0})}
-const BOX_WEIGHT=[0,.25,.5,.75,1];
-function readiness(){let t=0; for(const i of ITEMS){const s=S.items[i.id]; if(s) t+=BOX_WEIGHT[Math.min(4,s.box)]} return t/ITEMS.length}
 function isMastered(id){return (S.items[id]||{}).box>=4}
+/* Word states shown on the progress bar */
+function wordState(id){const s=S.items[id]; if(!s||s.box===0) return "new";
+  if(s.box>=4) return "learned"; if(s.box===3) return "once";
+  return (s.box===2||s.nr)?"almost":"notyet";}
+/* Everything due today. On day 8 every word that isn't learned yet is due, so nothing shaky is left unchecked before the test. */
 function dueItems(){const d=curDay(),u=unlockedSets();
-  return ITEMS.filter(i=>u.has(i.set)).filter(i=>{const s=S.items[i.id]; return !s||s.box===0||s.due<=d});}
+  return ITEMS.filter(i=>u.has(i.set)).filter(i=>{const s=S.items[i.id];
+    if(!s||s.box===0) return true;
+    if(s.ld===d) return false;                          // already practised today
+    return s.due<=d || (d===8&&s.box<4);});}
+/* Today's plan: due words in priority order, sized to the day's time budget using his measured speed. */
+const NEW_FLOOR=35;
+function dayMinutes(d){return d<=5?45:50}
+function secsPerCard(){const t=S.timing; return t&&t.n>=10?Math.min(90,Math.max(8,t.secs/t.n)):25}
+function prioritised(){
+  const due=dueItems(), box=b=>due.filter(i=>S.items[i.id]&&S.items[i.id].box===b);
+  const fresh=patternSorted(due.filter(i=>!S.items[i.id]||S.items[i.id].box===0));
+  return {b1:box(1),b3:box(3),fresh,b2:box(2),b4:box(4)};
+}
+function todayPlan(){
+  const d=curDay(); if(d>8) return [];
+  const p=prioritised(), doneToday=S.daysDone[d]||0;
+  const budget=Math.max(0,Math.round(dayMinutes(d)*60/secsPerCard())-doneToday);
+  const floorFresh=p.fresh.slice(0,NEW_FLOOR), restFresh=p.fresh.slice(NEW_FLOOR);
+  const must=[...p.b1,...p.b3,...floorFresh];                     // missed yesterday, nearly learned, new words
+  const opt=[...p.b2,...p.b4,...restFresh];
+  const plan=must.slice(0,Math.max(budget,floorFresh.length?must.length:0));
+  for(const i of opt){ if(plan.length>=budget) break; plan.push(i); }
+  return plan;
+}
+function planIds(){return new Set(todayPlan().map(i=>i.id))}
+/* Optional extra practice once the plan is done */
+function extraPool(){
+  const d=curDay(), inPlan=planIds();
+  const moreDue=dueItems().filter(i=>!inPlan.has(i.id));
+  if(moreDue.length) return {kind:"due",items:moreDue};
+  const ahead=ITEMS.filter(i=>{const s=S.items[i.id]; return s&&s.box>0&&s.box<=2&&s.ld!==d&&unlockedSets().has(i.set)});
+  if(ahead.length) return {kind:"ahead",items:ahead};
+  return {kind:"free",items:tricky(30)};
+}
 function tricky(n=15){return ITEMS.filter(i=>S.items[i.id]&&(S.items[i.id].wrong>0||S.items[i.id].box===1))
   .sort((a,b)=>(S.items[b.id].wrong-S.items[a.id].wrong)||(S.items[a.id].box-S.items[b.id].box)).slice(0,n)}
+
+/* ---------------- SPELLING PATTERNS ---------------- */
+/* Primary pattern of each word, used to group a day's new words and show a short rule first. */
+const PATTERNS=[
+ {id:"silent",name:"Silent letters",re:/\b(kn|wr)|mb\b|ould|gue|wh|igh/,en:"Some letters are written but not said – for example kn, wr, wh, gu and the l in could.",fi:"Osa kirjaimista kirjoitetaan, vaikka niitä ei sanota – esim. kn, wr, wh, gu ja could-sanan l.",ex:"knee, write"},
+ {id:"th",name:"th",re:/th/,en:"th is a sound Finnish doesn't have. It is always spelt t + h.",fi:"th on äänne, jota suomessa ei ole. Se kirjoitetaan aina t + h.",ex:"three, mother"},
+ {id:"softc",name:"c that says [s]",re:/c[eiy]/,en:"Before e, i and y, the letter c says [s].",fi:"Ennen e-, i- ja y-kirjainta c lausutaan [s].",ex:"city, nice"},
+ {id:"ay",name:"ay and ai",re:/a[yi]/,en:"The [ei] sound is often spelt ay at the end of a word and ai inside a word.",fi:"[ei]-äänne kirjoitetaan usein ay sanan lopussa ja ai sanan sisällä.",ex:"day, rain"},
+ {id:"ee",name:"ee, ea and ie",re:/ee|ea|ie/,en:"A long [ii] can be spelt ee, ea or ie – each word has its own.",fi:"Pitkä [ii] voidaan kirjoittaa ee, ea tai ie – jokaisella sanalla on omansa.",ex:"tree, sea, field"},
+ {id:"double",name:"Double letters",re:/([bcdfglmnprstz])\1/,en:"English has double letters that you don't hear. In Finnish a double means a long sound – in English it doesn't.",fi:"Englannissa on tuplakirjaimia, joita ei kuule. Suomessa tupla tarkoittaa pitkää äännettä – englannissa ei.",ex:"happy, dinner"},
+ {id:"ph",name:"ph, gh and ch",re:/ph|gh|ach/,en:"Some letter pairs make surprising sounds: ph = [f], gh = [f] or silent, ch = [k] in some words.",fi:"Jotkut kirjainparit äännetään yllättävästi: ph = [f], gh = [f] tai äänetön, ch = [k] joissain sanoissa.",ex:"phone, laugh"},
+ {id:"dz",name:"j and g",re:/j|g[ei]/,en:"The [dž] sound is spelt j – or g before e and i. The Finnish j sound is written y in English.",fi:"[dž]-äänne kirjoitetaan j – tai g ennen e:tä ja i:tä. Suomen j-äänne kirjoitetaan englanniksi y.",ex:"jam, orange, yes"},
+ {id:"oo",name:"oo, ou and ow",re:/oo|ou|ow/,en:"oo, ou and ow each have their own sounds – remember which one the word uses.",fi:"oo, ou ja ow äännetään eri tavoin – muista, mitä sana käyttää.",ex:"book, house, town"},
+ {id:"be",name:"be: am, are, is",set:5,re:/\b(am|are|is)\b/i,en:"be: I am · you are · he/she is · we are · they are. Questions swap the order: Are you? Is he?",fi:"be: I am · you are · he/she is · we are · they are. Kysymyksessä järjestys vaihtuu: Are you? Is he?",ex:"She is. Is she?"},
+ {id:"have",name:"have and has",set:5,re:/have|has/i,en:"have: only he/she changes – he/she has, doesn't have, Does he/she have?",fi:"have: vain hän-muoto muuttuu – he/she has, doesn't have, Does he/she have?",ex:"He has. He doesn't have."}
+];
+const PBYID=Object.fromEntries(PATTERNS.map(p=>[p.id,p]));
+function patternOf(it){const e=it.en.toLowerCase();
+  for(const p of PATTERNS){ if(p.set!=null){ if(it.set===p.set&&p.re.test(e)) return p.id; continue } if(it.set!==5&&p.re.test(e)) return p.id; }
+  return null}
+function patternSorted(list){ // keep each pattern's words together, biggest groups first, no-pattern words last
+  const g={}; list.forEach(i=>{const k=patternOf(i)||"~"; (g[k]=g[k]||[]).push(i)});
+  return Object.entries(g).sort((a,b)=>(a[0]==="~")-(b[0]==="~")||b[1].length-a[1].length).flatMap(([,v])=>v);
+}
 
 /* ---------------- ANSWER CHECKING ---------------- */
 const CONTR=[["i'm","i am"],["you're","you are"],["we're","we are"],["they're","they are"],["he's","he is"],["she's","she is"],
@@ -539,6 +622,11 @@ const POSS=["brush my teeth","do my homework","forget my books","remember my key
 POSS.forEach(e=>{ALT[e]=["your","his","her",""].map(p=>e.replace(" my "," "+(p?p+" ":"")).replace(/ +/g," "))});
 /* Finnish "unohtaa kirjat" points to specific books, so "the" is natural too (not for teeth: "brush the teeth" isn't idiomatic) */
 POSS.filter(e=>e!=="brush my teeth").forEach(e=>ALT[e].push(e.replace(" my "," the ")));
+/* "use phone" isn't correct English: phone needs a word before it. "use a phone" (any phone) is a correct translation of käyttää puhelinta. */
+ALT["use my phone"]=ALT["use my phone"].filter(x=>x!=="use phone").concat(["use a phone"]);
+/* Without a word before the noun these mean books/keys in general: nudged gently (not a mistake), see BOOKV */
+ALT["forget my books"]=ALT["forget my books"].filter(x=>x!=="forget books");
+ALT["remember my keys"]=ALT["remember my keys"].filter(x=>x!=="remember keys");
 /* Verb items: "to hope" etc. is also accepted, since the Finnish prompt is an infinitive */
 const VERB_SETS=new Set([6,7]);
 const VERBS=new Set(["hope","relax","believe","work","fix","enjoy","bake","take a road trip","be","grow up","cheer","practice","keep","hurt","move","check"]);
@@ -557,6 +645,9 @@ const AME={en:"Nearly! This is American English. The book uses the British versi
 const OTHER={en:"Nearly! This is correct English too, but the book uses a different expression – what is it?",fi:"Melkein! Tämäkin on oikeaa englantia, mutta kirjassa on toinen ilmaus – mikä?"};
 const BOOKV=[
  [/^have (breakfast|lunch|dinner)$/,/^(to )?eat (breakfast|lunch|dinner)$/,OTHER],
+ [/^a squad$/,/^((a|an|the) )?team$/,{en:"Nearly! “A team” is correct too, but the book uses another word. It is often used for a group of cheerleaders. What is it?",fi:"Melkein! “A team” on myös oikein, mutta kirjassa on toinen sana. Sitä käytetään usein cheerleader-ryhmästä. Mikä se on?"}],
+ [/^forget my books$/,/^(to )?forget books$/,{en:"Nearly! Without a word before “books” it means books in general. Whose books? Add one word.",fi:"Melkein! Ilman sanaa ennen “books” se tarkoittaa kirjoja yleensä. Kenen kirjat? Lisää yksi sana."}],
+ [/^remember my keys$/,/^(to )?remember keys$/,{en:"Nearly! Without a word before “keys” it means keys in general. Whose keys? Add one word.",fi:"Melkein! Ilman sanaa ennen “keys” se tarkoittaa avaimia yleensä. Kenen avaimet? Lisää yksi sana."}],
  [/^download$/,/^a download$/,{en:"Nearly! That's correct English too, but the book has it without an article, like on a screen: \"… complete\".",fi:"Melkein! Tämäkin on oikein, mutta kirjassa sana on ilman artikkelia, kuten ruudulla: \"… complete\"."}],
  [/^download$/,/^(a )?downloading$/,{en:"Nearly! That works too, but the book uses the short noun, like on a screen: \"… complete\". What is it?",fi:"Melkein! Tämäkin käy, mutta kirjassa on lyhyt substantiivi, kuten ruudulla: \"… complete\". Mikä se on?"}],
  [/^have a shower$/,/^(to )?take a shower$/,{en:"Nearly! This is more common in American English. The book uses the British version – what is it?",fi:"Melkein! Tämä on yleisempi amerikanenglannissa. Kirjassa on brittiläinen versio – mikä?"}],
@@ -571,7 +662,9 @@ function check(item,input){
   const inp=norm(input); if(!inp) return {kind:"empty"};
   const group=FI_GROUP[item.fi]||[item];
   for(const g of group){ const f=matchForm(g,inp); if(f){
-      if(!capsOK(f,input)) return {kind:"article",note:{en:"Check the capital letters.",fi:"Tarkista isot alkukirjaimet."},caps:true};
+      if(!capsOK(f,input)) return {kind:"article",caps:true,note:(/^[A-Z]/.test(f.trim())&&!/^[A-Z]/.test(input.trim()))
+          ?{en:"Almost! A sentence starts with a capital letter.",fi:"Melkein! Lause alkaa isolla alkukirjaimella."}
+          :{en:"Check the capital letters.",fi:"Tarkista isot alkukirjaimet."}};
       const poss=POSS.includes(g.en)&&f!==g.en;
       return {kind:"ok",other:group.filter(x=>x!==g).map(x=>x.en),book:poss?g.en:""}; } }
   const vs=[...allForms(item)];
@@ -633,106 +726,183 @@ function renderRoute(){
   // The road is time: the car sits on today's signpost. Learning is shown separately, so the two never contradict.
   const car=document.getElementById("car"), pos=Math.max(0,Math.min(8,d-1))/8;
   car.style.left=`calc(15px + (100% - 30px) * ${pos})`; car.style.visibility=d<1?"hidden":"visible";
-  const total=ITEMS.length, m=ITEMS.filter(i=>isMastered(i.id)).length,
-        p=ITEMS.filter(i=>S.items[i.id]&&S.items[i.id].box>0&&!isMastered(i.id)).length;
-  document.getElementById("lcount").textContent=m+" / "+total+" learned";
-  document.getElementById("lm").style.width=(m/total*100)+"%";
-  document.getElementById("lp").style.width=(p/total*100)+"%";
-  document.getElementById("lbar").setAttribute("aria-label",`${m} of ${total} learned for sure, ${p} in practice`);
-  const left=d>=1&&d<=8?dueItems().length:0;
+  const total=ITEMS.length, c={learned:0,once:0,almost:0,notyet:0,new:0};
+  ITEMS.forEach(i=>c[wordState(i.id)]++);
+  document.getElementById("lcount").textContent=c.learned+" / "+total+" learned";
+  for(const k of ["learned","once","almost","notyet"]) document.getElementById("lb-"+k).style.width=(c[k]/total*100)+"%";
+  document.getElementById("lbar").setAttribute("aria-label",`${c.learned} learned, ${c.once} right once, ${c.almost} almost, ${c.notyet} not yet, of ${total}`);
+  const left=d>=1&&d<=8?todayPlan().length:0;
   let msg;
   if(d<1) msg="The route hasn't started yet.";
   else if(d>=9) msg=d===9?"Good luck in the test!":"The test is done – great work!";
-  else if(left) msg=`<b>${left}</b> cards left today.`;
-  else msg="Today's cards are done ✓";
-  if(d>=1&&d<=3&&m===0) msg+=" Words count as learned after correct answers on two different days.";
+  else if(left) msg=`<b>${left}</b> cards left in today's plan · about ${Math.max(1,Math.round(left*secsPerCard()/60))} min.`;
+  else msg="Today's plan is done ✓";
   document.getElementById("status").innerHTML=msg;
 }
 function setView(v){view=v; document.body.classList.remove("session"); document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v));
   renderRoute(); ({home,practice:practiceStart,paper,progress,settings})[v](); window.scrollTo(0,0)}
 document.getElementById("tabs").onclick=e=>{const b=e.target.closest("button"); if(b)setView(b.dataset.v)};
 
+function extraLabel(x){return x.kind==="due"?`Extra round (${x.items.length} more cards)`:x.kind==="ahead"?"Extra: get ahead on tricky words":"Extra: review tricky words"}
 function home(){
-  const d=curDay(), due=dueItems(), total=ITEMS.length, m=ITEMS.filter(i=>isMastered(i.id)).length;
+  const d=curDay(), plan=todayPlan(), mins=Math.max(1,Math.round(plan.length*secsPerCard()/60)), sessions=Math.max(1,Math.ceil(mins/15));
   const newSets=(UNLOCK[d]||[]).map(s=>SETS[s]).join(" + ");
   const pt=PAPER[Math.min(d,8)];
   let h=`<section><h2>${d>=9?"Test day":"Today's tasks"}</h2><div class="panel">`;
   if(d>=9){h+=bi({en:"In the morning, 5 minutes: go through the tricky words once (Paper → Tricky words). Nothing new to learn. Good luck in the test!",
      fi:"Aamulla 5 minuuttia: käy vaikeat sanat kerran läpi (Paperi → Vaikeat sanat). Ei uutta opeteltavaa. Onnea kokeeseen!"})}
   else{
-   h+=`<div class="task"><span class="tag">App</span><div><h3>${due.length? "Drive today's cards: "+due.length:"Today's cards are done ✓"}</h3>
-     ${bi({en:(newSets?"New sets today: "+newSets+". ":"")+"One round = 15 cards, about 5 minutes. You can do rounds throughout the day.",
-          fi:(due.length?"Harjoittele päivän kortit: "+due.length+" kpl. ":"Päivän kortit on tehty. ")+(newSets?"Uudet sarjat tänään: "+newSets+". ":"")+"Yksi kierros = 15 korttia, noin 5 minuuttia. Voit tehdä kierroksia pitkin päivää."})}</div></div>
+   h+=`<div class="task"><span class="tag">App</span><div><h3>${plan.length? "Today's plan: "+plan.length+" cards":"Today's plan is done ✓"}</h3>
+     ${plan.length?bi({en:`About ${mins} min – for example ${sessions} session${sessions>1?"s":""} of up to 15 minutes. ${newSets?"New sets today: "+newSets+". ":""}${d===8?"Today every word that isn't learned yet comes back once more.":""}`,
+          fi:`Päivän suunnitelma: ${plan.length} korttia, noin ${mins} min – esim. ${sessions} kertaa enintään 15 minuuttia. ${newSets?"Uudet sarjat tänään: "+newSets+". ":""}${d===8?"Tänään kaikki vielä oppimattomat sanat tulevat kerran uudestaan.":""}`})
+      :bi({en:"Well done! Extra practice below is optional.",fi:"Hienoa! Alla oleva lisäharjoitus on vapaaehtoista."})}</div></div>
      <div class="task"><span class="tag paper">Paper</span><div><h3>${esc(pt[0])}</h3>${bi({en:pt[1],fi:pt[2]+" "+pt[3]})}</div></div>`;
   }
-  h+=`<div class="btnrow"><button class="btn primary" id="go" ${due.length?"":"disabled"}>Start a round</button></div></div></section>
-   ${d>=6&&d<=8&&due.length===0?'<section><div class="panel"><p class="small muted" style="margin:0">All cards are done. The mock test is on the Paper tab.</p></div></section>':""}`;
+  const x=d<=8?extraPool():null;
+  h+=`<div class="btnrow">${plan.length?`<button class="btn primary" id="go">Start a round</button>`:""}
+      ${x&&x.items.length?`<button class="btn ${plan.length?"ghost":"primary"}" id="extra">${extraLabel(x)}</button>`:""}</div></div></section>
+   ${d>=6&&d<=8&&!plan.length?'<section><div class="panel"><p class="small muted" style="margin:0">The mock test is on the Paper tab.</p></div></section>':""}`;
   $v.innerHTML=h;
-  const g=document.getElementById("go"); if(g) g.onclick=()=>startSession("type");
+  const g=document.getElementById("go"); if(g) g.onclick=()=>startSession("plan");
+  const e=document.getElementById("extra"); if(e) e.onclick=()=>startSession("extra");
 }
 
 /* ---- practice session ---- */
 let Q=[],qi=0,sess=null;
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function practiceStart(){
-  const due=dueItems();
-  $v.innerHTML=`<section><h2>Practise</h2><div class="panel"><p>${due.length?due.length+" cards are waiting today.":"Today's cards are done. You can review freely, or unlock the next set early in Settings."}</p>
-   <div class="btnrow"><button class="btn primary" id="t1">Finnish → English</button><button class="btn ghost" id="t3">Free review (tricky words)</button></div></div></section>`;
-  document.getElementById("t1").onclick=()=>startSession("type");
-  document.getElementById("t3").onclick=()=>startSession("type",true);
+  const plan=todayPlan(), x=extraPool();
+  $v.innerHTML=`<section><h2>Practise</h2><div class="panel"><p>${plan.length?plan.length+" cards left in today's plan.":"Today's plan is done. Extra practice is optional."}</p>
+   <div class="btnrow">${plan.length?`<button class="btn primary" id="t1">Today's plan</button>`:""}
+   ${x.items.length?`<button class="btn ${plan.length?"ghost":"primary"}" id="t3">${extraLabel(x)}</button>`:""}</div></div></section>`;
+  const a=document.getElementById("t1"); if(a) a.onclick=()=>startSession("plan");
+  const b=document.getElementById("t3"); if(b) b.onclick=()=>startSession("extra");
 }
-function startSession(mode,free){
-  let pool=free?tricky(30):dueItems();
-  if(free&&!pool.length){const u=unlockedSets(); pool=ITEMS.filter(i=>u.has(i.set))}
+function startSession(kind){
+  let pool, free=false;
+  if(kind==="extra"){const x=extraPool(); pool=x.items; free=x.kind==="free"}
+  else pool=todayPlan();
   if(!pool.length){practiceStart();return}
-  const box1=shuffle(pool.filter(i=>S.items[i.id]&&S.items[i.id].box===1));
-  const fresh=shuffle(pool.filter(i=>!S.items[i.id]||S.items[i.id].box===0));
-  const rest=shuffle(pool.filter(i=>S.items[i.id]&&S.items[i.id].box>1));
-  Q=[...box1,...fresh,...rest].slice(0,15).map(i=>({id:i.id,re:false}));
-  qi=0; sess={mode,free:!!free,first:0,fixed:0,seen:new Set(),rq:{},clean:new Set(),tries:0,hint:false,revealed:false,done:false};
+  const take=pool.slice(0,15);                                // pool is already in priority order
+  const seen=shuffle(take.filter(i=>S.items[i.id]&&S.items[i.id].box>0));
+  const fresh=patternSorted(take.filter(i=>!S.items[i.id]||S.items[i.id].box===0));
+  // Warm-up with review words, then the new words grouped by pattern, each group led by its rule card
+  Q=seen.map(i=>({id:i.id}));
+  const d=curDay(); let last=null;
+  for(const i of fresh){const p=patternOf(i);
+    if(p&&p!==last&&fresh.filter(x=>patternOf(x)===p).length>=2&&S.rulesShown[p]!==d) Q.push({rule:p});
+    last=p; Q.push({id:i.id});}
+  qi=0; sess={kind,free,first:0,fixed:0,rq:{},clean:new Set(),t0:0};
   buildCard(); showCard();
 }
+document.addEventListener("keydown",e=>{ if(e.key==="Enter"&&sess&&sess.mode==="rule"&&document.body.classList.contains("session")){e.preventDefault(); onCheck(); const a=document.getElementById("ans"); if(a) a.focus({preventScroll:true});} });
 function buildCard(){
   document.body.classList.add("session");
   $v.innerHTML=`<section><div class="panel">
-   <div class="cardtop"><span id="ctag"></span><span id="cnum"></span></div>
+   <div class="cardtop"><span id="ctag"></span><span><span id="cnum"></span><button class="linkbtn" id="quit" type="button">Stop</button></span></div>
    <div class="bar"><b id="cbar"></b></div>
    <div class="prompt" id="cprompt"></div>
    <input class="answer" id="ans" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="enter" aria-label="Your answer in English">
-   <div class="btnrow"><button class="btn primary" id="chk">Check</button><button class="btn ghost" id="hb">Hint</button><button class="btn ghost" id="quit">Stop</button></div>
+   <div class="btnrow"><button class="btn primary" id="chk">Check</button><button class="btn ghost" id="idk">I don't know</button><button class="btn ghost" id="hb">Hint</button></div>
    <div id="hint"></div><div id="fb" aria-live="polite"></div>
   </div></section>`;
   const ans=document.getElementById("ans");
   ans.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault(); onCheck()}};
+  ans.oninput=()=>{ if(sess.mode==="study"){const m=document.getElementById("studymodel"); if(m) m.classList.add("covered")} };
   // Tapping a button must not take focus from the input: otherwise the keyboard closes and the page jumps
-  $v.querySelectorAll(".btnrow button").forEach(b=>b.addEventListener("mousedown",e=>e.preventDefault()));
+  $v.querySelectorAll("button").forEach(b=>b.addEventListener("mousedown",e=>e.preventDefault()));
   document.getElementById("chk").onclick=()=>{onCheck(); ans.focus({preventScroll:true})};
-  document.getElementById("hb").onclick=()=>{ if(sess.done) return; sess.hint=true;
+  document.getElementById("idk").onclick=()=>{onDontKnow(); ans.focus({preventScroll:true})};
+  document.getElementById("hb").onclick=()=>{ if(sess.mode!=="answer") return; sess.hint=true;
     document.getElementById("hint").innerHTML=`<div class="hintline">${esc(hintPattern(BYID[Q[qi].id].en))}</div>`; ans.focus({preventScroll:true})};
   document.getElementById("quit").onclick=endSession;
   window.scrollTo(0,0);
 }
+function cardNumbers(){const words=Q.filter(x=>!x.rule).length, n=Q.slice(0,qi+1).filter(x=>!x.rule).length; return [n,words]}
 function showCard(){
   if(qi>=Q.length){endSession();return}
-  const c=Q[qi], it=BYID[c.id]; sess.tries=0; sess.hint=false; sess.alt=false; sess.revealed=false; sess.done=false;
-  const multi=(FI_GROUP[it.fi]||[]).length>1;
-  document.getElementById("ctag").textContent=SETS[it.set]+(c.re?" · again":(c.fill?" · review":""));
-  document.getElementById("cnum").textContent=(qi+1)+"/"+Q.length;
-  document.getElementById("cbar").style.width=(qi/Q.length*100)+"%";
-  const pr=document.getElementById("cprompt");
-  pr.classList.toggle("long",it.fi.length>26);
-  pr.innerHTML=`<span lang="fi">${esc(it.fi)}</span>${multi?'<span class="muted small">(two correct answers)</span>':""}`;
+  const c=Q[qi]; sess.tries=0; sess.hint=false; sess.alt=false; sess.firstNear=false; sess.last=""; sess.mode="answer"; sess.t0=Date.now();
+  const [n,words]=cardNumbers();
   const ans=document.getElementById("ans"); ans.value=""; ans.className="answer";
   document.getElementById("hint").innerHTML=""; document.getElementById("fb").innerHTML="";
-  document.getElementById("chk").textContent="Check"; document.getElementById("hb").disabled=false;
-  if(document.activeElement!==ans) ans.focus({preventScroll:true});
+  document.getElementById("cbar").style.width=(Math.max(0,n-(c.rule?0:1))/words*100)+"%";
+  document.getElementById("cnum").textContent=c.rule?"":n+"/"+words;
+  const pr=document.getElementById("cprompt"), chk=document.getElementById("chk"); chk.disabled=false;
+  const panel=$v.querySelector(".panel");
+  if(c.rule){ // rule card: a reading moment, not a question – no answer box
+    const p=PBYID[c.rule]; sess.mode="rule"; S.rulesShown[c.rule]=curDay(); save();
+    panel.classList.add("rulemode"); if(document.activeElement) document.activeElement.blur();
+    document.getElementById("ctag").textContent="New spelling rule";
+    const hl=new RegExp(p.re.source,"gi");
+    const ex=p.ex.split(/,\s*/).map(w=>`<span class="exword">${esc(w).replace(hl,m=>`<b>${m}</b>`)}</span>`).join("");
+    let k=qi+1,count=0; while(k<Q.length&&Q[k].id&&patternOf(BYID[Q[k].id])===c.rule){count++;k++}
+    pr.classList.remove("long"); pr.innerHTML=`<span>${esc(p.name)}</span>`;
+    document.getElementById("fb").innerHTML=`<div class="rulebox">${bi({en:p.en,fi:p.fi},true)}
+      <div class="exrow">${ex}</div>
+      <p class="small muted" style="margin:10px 0 0">The next ${count} word${count===1?"":"s"} use${count===1?"s":""} this rule.</p></div>`;
+    chk.textContent="Got it – start";
+  } else {
+    panel.classList.remove("rulemode");
+    const it=BYID[c.id], multi=(FI_GROUP[it.fi]||[]).length>1;
+    document.getElementById("ctag").textContent=SETS[it.set]+(c.re?" · again":(c.fill?" · review":""));
+    pr.classList.toggle("long",it.fi.length>26);
+    pr.innerHTML=`<span lang="fi">${esc(it.fi)}</span>${multi?'<span class="muted small">(two correct answers)</span>':""}`;
+    chk.textContent="Check"; document.getElementById("idk").disabled=false; document.getElementById("hb").disabled=false;
+  }
+  if(!c.rule&&document.activeElement!==ans) ans.focus({preventScroll:true});
+}
+/* How close an answer is: "near" answers get their wrong letters marked, far ones get the study card */
+function closestForm(it,input){
+  const a=input.trim().replace(/[’‘`´]/g,"'").replace(/[.!?]+$/,"");
+  let best=null;
+  for(const f of forms(it)){ const base=f.replace(/\s*\/\s*/g,"/");
+    const opts=base.includes("/")?expandSlash(base):[base];
+    for(const o of opts){const t=o.replace(/[.!?]+$/,""), dist=lev(t.toLowerCase(),a.toLowerCase()); if(!best||dist<best.dist) best={t,dist}}}
+  return best;
+}
+function expandSlash(s){const m=s.match(/(\S+)\/(\S+)/); if(!m) return [s];
+  const [w,a,b]=m, cap=x=>w[0]===w[0].toUpperCase()?x[0].toUpperCase()+x.slice(1):x;
+  return [s.replace(w,cap(a)),s.replace(w,cap(b)),s];}
+function isNear(dist,target){return dist<=Math.max(2,Math.ceil(target.length*0.3))}
+/* Mark his own answer: wrong or extra letters highlighted, ‸ where a letter is missing. Never shows the correct letters. */
+function markAttempt(attempt,target){
+  const a=attempt.trim(), A=a.toLowerCase(), B=target.toLowerCase(), m=A.length, n=B.length;
+  const D=Array.from({length:m+1},(_,i)=>{const r=new Array(n+1).fill(0); r[0]=i; return r}); for(let j=0;j<=n;j++)D[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)D[i][j]=Math.min(D[i-1][j-1]+(A[i-1]===B[j-1]?0:1),D[i-1][j]+1,D[i][j-1]+1);
+  const ops=[]; let i=m,j=n;                       // backtrace
+  while(i>0||j>0){
+    if(i>0&&j>0&&D[i][j]===D[i-1][j-1]+(A[i-1]===B[j-1]?0:1)){ops.push(A[i-1]===B[j-1]?["ok",a[i-1]]:["bad",a[i-1]]); i--; j--;}
+    else if(i>0&&D[i][j]===D[i-1][j]+1){ops.push(["bad",a[i-1]]); i--;}   // extra letter in his answer
+    else {ops.push(["gap"]); j--;}                                            // letter missing
+  }
+  ops.reverse(); let out="";
+  for(const o of ops){ if(o[0]==="ok") out+=esc(o[1]); else if(o[0]==="bad") out+=`<mark class="bad">${o[1]===" "?"&nbsp;":esc(o[1])}</mark>`;
+    else if(!out.endsWith('‸</span>')) out+='<span class="gap">‸</span>'; }
+  return out;
+}
+function onDontKnow(){
+  if(sess.mode!=="answer") return;
+  const c=Q[qi]; grade(c,"wrong",false); if(!c.fill) requeue(c.id); startStudy(null); save();
+}
+function startStudy(lastAttempt){
+  const c=Q[qi], it=BYID[c.id], fb=document.getElementById("fb"), ans=document.getElementById("ans");
+  sess.mode="study"; const model=it.en.replace(/\s*\/\s*/g,"/"), tip=tipFor(it.en);
+  fb.innerHTML=`<div class="fb no"><b>${lastAttempt?"This is the right spelling:":"Here it is:"}</b>
+    <div class="model" id="studymodel">${lastAttempt?diffHTML(model,lastAttempt):esc(model)}</div>
+    ${bi(tip)}${bi({en:"Look at it and say it to yourself. Then type it from memory – it hides when you start typing.",fi:"Katso sanaa ja sano se mielessäsi. Kirjoita se sitten muistista – se piiloutuu, kun alat kirjoittaa."})}</div>`;
+  ans.value=""; ans.className="answer"; document.getElementById("hint").innerHTML="";
+  document.getElementById("idk").disabled=true; document.getElementById("hb").disabled=true;
 }
 function onCheck(){
-  const c=Q[qi], it=BYID[c.id], ans=document.getElementById("ans"), fb=document.getElementById("fb");
-  if(sess.done){qi++;showCard();return}
-  if(sess.revealed){ // copy step
-    if(check(it,ans.value).kind==="ok"){sess.fixed++; S.km+=2; save(); fb.innerHTML+=`<p>${c.fill?"Good. This word comes back tomorrow.":"Good. This word comes back later in this round – try to remember it then."}</p>`; finishCard(); }
-    else{ans.classList.add("no"); ans.select()} return }
+  const c=Q[qi], ans=document.getElementById("ans"), fb=document.getElementById("fb");
+  if(sess.mode==="done"||sess.mode==="rule"){qi++;showCard();return}
+  if(sess.mode==="choose") return;
+  const it=BYID[c.id];
+  if(sess.mode==="study"){
+    if(check(it,ans.value).kind==="ok"){ sess.fixed++; S.km+=2;
+      fb.innerHTML+=`<p>${c.fill?"Good. This word comes back tomorrow.":"Good. This word comes back later in this round – try to remember it then."}</p>`; finishCard(); }
+    else { const m=document.getElementById("studymodel"); if(m) m.classList.remove("covered"); ans.classList.add("no"); ans.select(); }
+    return }
   const r=check(it,ans.value); if(r.kind==="empty")return;
   const tip=tipFor(it.en);
   if(r.kind==="ok"){
@@ -742,71 +912,78 @@ function onCheck(){
       ${r.other&&r.other.length?`<div class="small">Also correct: ${esc(r.other.join(", "))}</div>`:""}
       ${r.book?`<div class="small">In the book: ${esc(r.book)}</div>`:""}
       ${tip&&!firstTry?bi(tip):""}</div>`;
-    grade(c,firstTry?"first":(sess.alt&&sess.tries===0&&!sess.hint?"alt":"later")); S.km+=firstTry||sess.alt&&sess.tries===0?10:5;
+    grade(c,firstTry?"first":(sess.alt&&sess.tries===0&&!sess.hint?"alt":"later"),true); S.km+=firstTry||sess.alt&&sess.tries===0?10:5;
     if(firstTry) sess.clean.add(c.id);
     if((sess.tries>0||sess.hint) && !c.fill && requeue(c.id)) fb.querySelector(".fb").insertAdjacentHTML("beforeend",`<div class="small">This word comes back once more in this round.</div>`);
     save(); finishCard(); return;
   }
-  if(r.kind==="alt"){ // not a mistake: ask for the book's version without using up a try
-    sess.alt=true; ans.classList.remove("no");
-    fb.innerHTML=`<div class="fb ok">${bi(r.note,true)}</div>`; ans.select(); return;
-  }
-  sess.tries++;
-  ans.classList.add("no");
+  if(r.kind==="alt"){ sess.alt=true; ans.classList.remove("no"); fb.innerHTML=`<div class="fb ok">${bi(r.note,true)}</div>`; ans.select(); return; }
+  sess.tries++; sess.last=ans.value; ans.classList.add("no");
+  const close=r.kind==="no"?closestForm(it,ans.value):null, near=r.kind!=="no"||(close&&isNear(close.dist,close.t));
   if(sess.tries===1){
-    const msg=r.kind==="article"?r.note:(r.dist<=2?"Almost! A couple of letters are wrong.":"Not yet. Try again.");
-    const extra=r.gram?{en:r.gram[0],fi:r.gram[1]}:(r.kind!=="article"?tipHint(it.en):null);
-    fb.innerHTML=`<div class="fb no">${bi(msg,true)}${bi(extra)}</div>`;
-    if(!sess.hint&&r.kind==="no"&&r.dist>2){sess.hint=true; document.getElementById("hint").innerHTML=`<div class="hintline">${esc(hintPattern(it.en))}</div>`}
+    sess.firstNear=near;
+    if(r.kind==="article"){ fb.innerHTML=`<div class="fb no">${bi(r.note,true)}</div>`; }
+    else if(near){
+      fb.innerHTML=`<div class="fb no"><b>Almost! Fix the marked letters.</b><div class="model mine">${markAttempt(ans.value,close.t)}</div>
+        ${bi(r.gram?{en:r.gram[0],fi:r.gram[1]}:tipHint(it.en))}${bi({en:"Marked letters are wrong. ‸ means a letter is missing.",fi:"Merkityt kirjaimet ovat väärin. ‸ tarkoittaa, että kirjain puuttuu."})}</div>`;
+    } else {
+      fb.innerHTML=`<div class="fb no"><b>Not yet. Try again – or tap “I don't know”.</b>${bi(r.gram?{en:r.gram[0],fi:r.gram[1]}:tipHint(it.en))}</div>`;
+    }
     ans.select(); return;
   }
-  // second miss: reveal, require copy
-  grade(c,"wrong"); sess.revealed=true;
-  const model=it.en.replace(/\s*\/\s*/g,"/");
-  const expl=r.gram?{en:r.gram[2],fi:r.gram[3]}:tip;
-  fb.innerHTML=`<div class="fb no"><b>Correct answer:</b><div class="model">${diffHTML(model,ans.value)}</div>
-    ${bi(expl)}<div class="small">Now type it correctly once.</div></div>`;
-  ans.value=""; ans.classList.remove("no"); ans.focus({preventScroll:true});
-  if(!c.fill) requeue(c.id);
-  save();
+  // second miss
+  grade(c,"wrong",near); if(!c.fill) requeue(c.id); save();
+  if(near&&r.kind==="no"&&norm(ans.value)!==norm(close.t)){ // choose between his version and the right one
+    sess.mode="choose"; ["chk","idk","hb"].forEach(x=>document.getElementById(x).disabled=true);
+    const opts=shuffle([{t:close.t,ok:true},{t:ans.value.trim(),ok:false}]);
+    fb.innerHTML=`<div class="fb no"><b>Which one is right?</b><div class="choices" style="margin-top:10px">${opts.map((o,k)=>`<button class="btn ghost pick" data-k="${k}" type="button">${esc(o.t)}</button>`).join("")}</div></div>`;
+    fb.querySelectorAll(".pick").forEach(b=>{b.addEventListener("mousedown",e=>e.preventDefault());
+      b.onclick=()=>{const o=opts[+b.dataset.k]; const last=sess.last; document.getElementById("chk").disabled=false; startStudy(last);
+        fb.querySelector(".fb b").textContent=o.ok?"Yes, that's the right one. Now type it:":"No – this is the right one:";
+        ans.focus({preventScroll:true});}});
+  } else startStudy(ans.value);
 }
 /* Successive relearning: a word that needed help keeps coming back in the same round
    until he recalls it correctly on the first try without a hint (max 4 extra times, then it waits for tomorrow). */
 function requeue(id){
   const n=sess.rq[id]||0; if(n>=4) return false; sess.rq[id]=n+1;
   let pos=Math.min(qi+5,Q.length);
-  const gap=pos-qi-1;                       // cards between now and the repeat
+  const gap=pos-qi-1;
   if(gap<2){ // near the end of the round: put 1–2 familiar words in between, never new ones
-    const inQ=new Set(Q.slice(qi).map(x=>x.id)), d=curDay(), u=unlockedSets();
+    const inQ=new Set(Q.slice(qi).filter(x=>x.id).map(x=>x.id)), d=curDay(), u=unlockedSets();
     const strong=shuffle(ITEMS.filter(i=>u.has(i.set)&&!inQ.has(i.id)&&i.id!==id&&S.items[i.id]&&S.items[i.id].box>=3&&S.items[i.id].due>d))
-      .sort((a,b)=>S.items[b.id].box-S.items[a.id].box);            // learned words first
+      .sort((a,b)=>S.items[b.id].box-S.items[a.id].box);
     const cleanToday=shuffle([...sess.clean].filter(x=>!inQ.has(x)&&x!==id)).map(x=>BYID[x]);
     const fill=[...strong,...cleanToday.filter(i=>!strong.includes(i))].slice(0,2-gap);
     Q.push(...fill.map(i=>({id:i.id,fill:true}))); pos=Q.length;
   }
   Q.splice(pos,0,{id,re:true}); return true;
 }
-function finishCard(){sess.done=true; document.getElementById("chk").textContent="Next"; document.getElementById("hb").disabled=true;
-  document.getElementById("cnum").textContent=(qi+1)+"/"+Q.length}
-function grade(c,res){
-  if(c.fill){ if(res==="wrong"){const s=st(c.id); s.wrong++; s.box=1; s.due=curDay()+1} return } // bonus review: a miss sends it to tomorrow, no extra repeats today
-  if(c.re||sess.free){ if(res==="wrong") {const s=st(c.id); s.wrong++} return }  // repeats & free review don't move boxes up
+function finishCard(){sess.mode="done"; document.getElementById("chk").textContent="Next";
+  document.getElementById("hb").disabled=true; document.getElementById("idk").disabled=true;
+  const c=Q[qi]; if(c&&c.id&&!c.re&&!c.fill&&!sess.free){ // measure speed for the day plan (planned cards only)
+    const secs=Math.min(120,(Date.now()-sess.t0)/1000); S.timing.secs+=secs; S.timing.n++; }
+}
+function grade(c,res,near){
+  if(c.fill){ if(res==="wrong"){const s=st(c.id); s.wrong++; s.box=1; s.due=curDay()+1; s.nr=!!near} return }
+  if(c.re||sess.free){ if(res==="wrong") {const s=st(c.id); s.wrong++} return }
   const s=st(c.id), d=curDay();
-  if(res==="first"){ s.right++; s.box = s.box===0?3:Math.min(4,s.box+1); s.due=d+({1:1,2:2,3:2,4:3})[s.box]; sess.first++; }
-  else if(res==="alt"){ s.right++; s.box=Math.max(1,s.box); s.due=d+1 } // knew a correct synonym: no penalty, book version checked again tomorrow
-  else if(res==="later"){ s.box=Math.max(1,Math.min(s.box,2)); s.due=d+1 }
-  else { s.wrong++; s.box=1; s.due=d+1 }
-  S.daysDone[d]=(S.daysDone[d]||0)+1;
+  if(res==="first"){ s.right++; s.box = s.box>=3?4:3; s.due=d+(s.box===3?2:3); sess.first++; s.nr=false; }  // right on two different days → learned
+  else if(res==="alt"){ s.right++; s.box=Math.max(1,s.box); s.due=d+1 }
+  else if(res==="later"){ s.box=Math.max(1,Math.min(s.box,2)); s.due=d+1; s.nr=true }
+  else { s.wrong++; s.box=1; s.due=d+1; s.nr=!!near }
+  s.ld=d; S.daysDone[d]=(S.daysDone[d]||0)+1;
 }
 function endSession(){
   document.body.classList.remove("session"); if(document.activeElement) document.activeElement.blur();
-  save(); const left=dueItems().length;
+  save(); const left=todayPlan().length, x=extraPool();
   $v.innerHTML=`<section><div class="panel"><h2>Round done</h2>
    <p>Correct first time: <b>${sess.first}</b>${sess.fixed?` · fixed: <b>${sess.fixed}</b>`:""}</p>
-   <p class="muted">${left?left+" cards left today. You can do the next round now or later.":"Today's cards are done. Don't forget the paper task!"}</p>
-   <div class="btnrow">${left?`<button class="btn primary" id="again">Next round</button>`:""}<button class="btn ghost" id="back">Back</button></div></div></section>`;
+   <p class="muted">${left?left+" cards left in today's plan. You can do the next round now or later.":"Today's plan is done. Don't forget the paper task!"}</p>
+   <div class="btnrow">${left?`<button class="btn primary" id="again">Next round</button>`:(x.items.length?`<button class="btn ghost" id="more">${extraLabel(x)}</button>`:"")}<button class="btn ghost" id="back">Back</button></div></div></section>`;
   renderRoute();
-  const a=document.getElementById("again"); if(a)a.onclick=()=>startSession(sess.mode);
+  const a=document.getElementById("again"); if(a)a.onclick=()=>startSession("plan");
+  const m=document.getElementById("more"); if(m)m.onclick=()=>startSession("extra");
   document.getElementById("back").onclick=()=>setView("home");
 }
 
@@ -857,8 +1034,8 @@ function paperCard(){
     const also=e.id?[...alts,...(isVerb(it)?["the to-form"]:[])]:[];
     document.getElementById("rev").innerHTML=`<div class="fb ok"><div class="model">${esc(it.en)}</div>${also.length?`<div class="small">Also accepted: ${esc(also.join(", "))}</div>`:""}${bi(tipFor(it.en))}</div>`;
     document.getElementById("pbtns").innerHTML=`<button class="btn good" id="y">✓ Correct</button><button class="btn bad" id="n">✗ Wrong</button>`;
-    document.getElementById("y").onclick=()=>{P.ok++; if(e.id){const s=st(e.id); s.right++; if(s.box===0){s.box=2;s.due=curDay()+1}} S.km+=5; P.i++; paperCard()};
-    document.getElementById("n").onclick=()=>{P.miss.push(it); if(e.id){const s=st(e.id); s.wrong++; s.box=1; s.due=curDay()+1} S.km+=2; P.i++; paperCard()};
+    document.getElementById("y").onclick=()=>{P.ok++; if(e.id){const s=st(e.id); s.right++; if(s.box===0){s.box=3;s.due=curDay()+2;s.ld=curDay()}} S.km+=5; P.i++; paperCard()};
+    document.getElementById("n").onclick=()=>{P.miss.push(it); if(e.id){const s=st(e.id); s.wrong++; s.box=1; s.due=curDay()+1; s.ld=curDay()} S.km+=2; P.i++; paperCard()};
   };
 }
 
@@ -893,7 +1070,7 @@ function settings(){
       <button class="btn bad" id="resetyes">Yes, reset everything</button><button class="btn ghost" id="resetno">Cancel</button>`;
     document.getElementById("resetno").onclick=()=>setView("settings");
     document.getElementById("resetyes").onclick=()=>{
-      S={start:todayStr(),items:{},km:0,daysDone:{},strict:true,extra:[]};
+      S=migrate({start:todayStr(),items:{},km:0,daysDone:{},strict:true,extra:[]});
       try{localStorage.removeItem(KEY)}catch(e){}
       save(); setView("home");
     };
